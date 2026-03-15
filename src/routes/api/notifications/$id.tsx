@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { initFirebaseAdmin } from '@/lib/firebase-admin'
 import { getServerSession } from '@/lib/auth/session'
 import { deleteNotification } from '@/services/notification.service'
 
@@ -6,6 +7,7 @@ export const Route = createFileRoute('/api/notifications/$id')({
   server: {
     handlers: {
       DELETE: async ({ request, params }: { request: Request; params: { id: string } }) => {
+        initFirebaseAdmin()
         const session = await getServerSession(request)
         if (!session) return new Response('Unauthorized', { status: 401 })
 

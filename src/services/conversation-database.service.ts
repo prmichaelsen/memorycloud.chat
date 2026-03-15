@@ -11,7 +11,9 @@
 import {
   queryDocuments,
   getDocument,
+  setDocument,
 } from '@prmichaelsen/firebase-admin-sdk-v8'
+import { initFirebaseAdmin } from '@/lib/firebase-admin'
 
 const BASE = 'agentbase'
 
@@ -204,6 +206,40 @@ export class ConversationDatabaseService {
       console.error('[ConversationDatabaseService] getConversation failed:', error)
       return null
     }
+  }
+
+  /**
+   * Create a new conversation (DM or group) in the shared collection.
+   */
+  static async createConversation(input: {
+    type: ConversationDoc['type']
+    participant_user_ids: string[]
+    name?: string
+    description?: string
+    created_by: string
+  }): Promise<ConversationDoc> {
+    initFirebaseAdmin()
+    const path = getSharedConversations()
+    const now = new Date().toISOString()
+    const id = crypto.randomUUID()
+
+    const doc: ConversationDoc = {
+      id,
+      type: input.type,
+      name: input.name,
+      description: input.description ?? null,
+      participant_user_ids: input.participant_user_ids,
+      owner_user_id: input.created_by,
+      is_dm: input.type === 'dm',
+      last_message_at: null,
+      last_message_preview: null,
+      message_count: 0,
+      created_at: now,
+      updated_at: now,
+    }
+
+    await setDocument(path, id, doc)
+    return doc
   }
 
   /**
