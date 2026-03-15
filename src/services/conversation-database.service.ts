@@ -12,6 +12,7 @@ import {
   queryDocuments,
   getDocument,
   setDocument,
+  updateDocument,
 } from '@prmichaelsen/firebase-admin-sdk-v8'
 import { initFirebaseAdmin } from '@/lib/firebase-admin'
 
@@ -240,6 +241,22 @@ export class ConversationDatabaseService {
 
     await setDocument(path, id, doc)
     return doc
+  }
+
+  /**
+   * Update the last message preview on a conversation document.
+   */
+  static async updateLastMessage(
+    conversationId: string,
+    preview: { content: string; sender_id: string; sender_name: string; timestamp: string },
+  ): Promise<void> {
+    initFirebaseAdmin()
+    const path = getSharedConversations()
+    await updateDocument(path, conversationId, {
+      last_message_at: preview.timestamp,
+      last_message_preview: preview.content,
+      updated_at: new Date().toISOString(),
+    })
   }
 
   /**
