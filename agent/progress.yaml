@@ -198,11 +198,16 @@ recent_work:
     description: "Completed M2 (core messaging), M3 (memory integration), M4 (notifications & polish) via parallel agents"
   - date: 2026-03-15
     description: "Merged all branches, deployed to Cloudflare Workers, fixed Tailwind v4 @theme CSS token issue"
+  - date: 2026-03-15
+    description: "Added notification REST API routes (5 endpoints), fixed 404s. Redeployed. Domain: memorycloud.chat"
+  - date: 2026-03-15
+    description: "Audit #1: requirements vs implementation — 14/14 P0 features, 100% color system compliance"
 
 next_steps:
-  - Integration pass to resolve remaining TypeScript errors across milestones
-  - Task 1 (extract @prmichaelsen/agentbase-core) remains deferred
-  - Delete stale duplicate task file in agent/tasks/unassigned/
+  - Wire Firebase Admin SDK for server-side auth (session verification)
+  - Integrate @prmichaelsen/remember-core SDK for real memory operations
+  - Connect Firestore for conversation/message persistence
+  - E2E testing of core flows
 
 notes: []
 
