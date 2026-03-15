@@ -16,6 +16,7 @@
     "wrangler": "export $(cat .env.cloudflare.local | xargs) && wrangler"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@cloudflare/vite-plugin": "^1.23.1",
     "@prmichaelsen/firebase-admin-sdk-v8": "^2.8.0",
     "@prmichaelsen/pretty-toasts": "^3.0.6",
