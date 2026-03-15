@@ -82,6 +82,24 @@ export const OWNER_PRESET: GroupPermissions = {
   can_ban: true,
 }
 
+export const ADMIN_PRESET: GroupPermissions = {
+  can_read: true,
+  can_publish: true,
+  can_manage_members: true,
+  can_moderate: true,
+  can_kick: true,
+  can_ban: false,
+}
+
+export const EDITOR_PRESET: GroupPermissions = {
+  can_read: true,
+  can_publish: true,
+  can_manage_members: false,
+  can_moderate: true,
+  can_kick: false,
+  can_ban: false,
+}
+
 export const MEMBER_PRESET: GroupPermissions = {
   can_read: true,
   can_publish: true,

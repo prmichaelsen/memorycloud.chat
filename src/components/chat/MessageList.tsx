@@ -9,6 +9,7 @@ import { useAuth } from '@/components/auth/AuthContext'
 import type { Message, MessageAttachment } from '@/types/conversations'
 import { isImageType, formatFileSize } from '@/services/upload.service'
 import { FileAttachment } from '@/components/chat/FileUpload'
+import { TypingIndicator } from '@/components/chat/TypingIndicator'
 import { Modal } from '@/components/ui/Modal'
 import { Download, Maximize2 } from 'lucide-react'
 
@@ -240,22 +241,7 @@ export function MessageList({
         })}
 
         {/* Typing indicators */}
-        {typingUsers.length > 0 && (
-          <div className={`flex items-center gap-2 py-2 px-1`}>
-            <div className="flex gap-1">
-              <span className={`w-1.5 h-1.5 rounded-full ${t.textMuted} animate-bounce`} style={{ animationDelay: '0ms', background: 'currentColor' }} />
-              <span className={`w-1.5 h-1.5 rounded-full ${t.textMuted} animate-bounce`} style={{ animationDelay: '150ms', background: 'currentColor' }} />
-              <span className={`w-1.5 h-1.5 rounded-full ${t.textMuted} animate-bounce`} style={{ animationDelay: '300ms', background: 'currentColor' }} />
-            </div>
-            <span className={`text-xs ${t.textMuted}`}>
-              {typingUsers.length === 1
-                ? `${typingUsers[0].user_name} is typing...`
-                : typingUsers.length === 2
-                  ? `${typingUsers[0].user_name} and ${typingUsers[1].user_name} are typing...`
-                  : `${typingUsers[0].user_name} and ${typingUsers.length - 1} others are typing...`}
-            </span>
-          </div>
-        )}
+        <TypingIndicator typingUsers={typingUsers} />
 
         {/* Scroll anchor */}
         <div ref={bottomRef} />

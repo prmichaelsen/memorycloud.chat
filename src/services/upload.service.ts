@@ -115,21 +115,18 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
 export async function getSignedUploadUrl(
   request: UploadRequest
 ): Promise<SignedUploadUrl> {
-  // Stub: Server function call to generate signed URL
-  // const response = await fetch('/api/uploads/signed-url', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(request),
-  // })
-  // return response.json()
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
 
-  // Return a stub signed URL for development
-  const fileKey = `${request.conversation_id}/${crypto.randomUUID()}/${request.file_name}`
-  return {
-    upload_url: `/api/uploads/${fileKey}`,
-    file_key: fileKey,
-    expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({ error: 'Upload request failed' }))
+    throw new Error(body.error ?? `Upload request failed: ${response.status}`)
   }
+
+  return response.json()
 }
 
 /**
