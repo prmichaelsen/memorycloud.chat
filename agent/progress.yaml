@@ -47,6 +47,14 @@ milestones:
     tasks_completed: 4
     estimated_weeks: 1
 
+  - id: milestone_6
+    name: Wire remember-core
+    status: not_started
+    file: agent/milestones/milestone-6-wire-remember-core.md
+    tasks_total: 3
+    tasks_completed: 0
+    estimated_weeks: 1
+
 tasks:
   milestone_1:
     - id: task-2
@@ -218,16 +226,42 @@ tasks:
       actual_hours: null
       completed_date: 2026-03-15T22:30:00Z
 
+  milestone_6:
+    - id: task-22
+      name: Install + Configure SvcClient
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-6-wire-remember-core/task-22-install-configure-svcclient.md
+      estimated_hours: 1-2
+      actual_hours: null
+      completed_date: null
+    - id: task-23
+      name: Wire MemoryDatabaseService to SvcClient
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-6-wire-remember-core/task-23-wire-memory-database-service.md
+      estimated_hours: 3-4
+      actual_hours: null
+      completed_date: null
+    - id: task-24
+      name: Wire GhostDatabaseService to SvcClient
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-6-wire-remember-core/task-24-wire-ghost-database-service.md
+      estimated_hours: 2-3
+      actual_hours: null
+      completed_date: null
+
 documentation:
   design_documents: 2
-  milestone_documents: 5
+  milestone_documents: 6
   pattern_documents: 43
-  task_documents: 21
+  task_documents: 24
 
 progress:
   planning: 100
-  implementation: 100
-  overall: 100
+  implementation: 85
+  overall: 88
 
 recent_work:
   - date: 2026-03-15
@@ -246,7 +280,7 @@ recent_work:
     description: "Audit #1: requirements vs implementation — 14/14 P0 features, 100% color system compliance"
 
 next_steps:
-  - Start M5 Pattern Migration with Task 18 (Create DatabaseServices)
+  - Start M6 with Task 22 (Install + Configure SvcClient)
   - Run @acp.proceed to begin implementation
 
 notes: []
