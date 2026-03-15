@@ -3,7 +3,10 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(./agent/scripts/acp.package-search.sh tanstack:*)",
-      "Bash(./agent/scripts/acp.package-install.sh --list --repo https://github.com/prmichaelsen/acp-tanstack-cloudflare.git)"
+      "Bash(./agent/scripts/acp.package-install.sh --list --repo https://github.com/prmichaelsen/acp-tanstack-cloudflare.git)",
+      "Bash(./agent/scripts/acp.package-install.sh -y --repo https://github.com/prmichaelsen/acp-tanstack-cloudflare.git)",
+      "Bash(gh repo:*)",
+      "Bash(git add:*)"
     ]
   }
 }
