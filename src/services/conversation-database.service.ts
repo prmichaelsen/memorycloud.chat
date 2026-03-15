@@ -11,6 +11,8 @@
 import {
   queryDocuments,
   getDocument,
+  setDocument,
+  deleteDocument,
 } from '@prmichaelsen/firebase-admin-sdk-v8'
 
 const BASE = 'agentbase'
@@ -224,6 +226,77 @@ export class ConversationDatabaseService {
     } catch (error) {
       console.error('[ConversationDatabaseService] getMessages failed:', error)
       return []
+    }
+  }
+
+  /**
+   * Update last message preview on a conversation.
+   */
+  static async updateLastMessage(
+    conversationId: string,
+    preview: { content: string; sender_id: string; sender_name: string; timestamp: string },
+  ): Promise<void> {
+    try {
+      const path = getSharedConversations()
+      await setDocument(path, conversationId, {
+        last_message_preview: preview.content,
+        last_message_at: preview.timestamp,
+        updated_at: new Date().toISOString(),
+      }, { merge: true })
+    } catch (error) {
+      console.error('[ConversationDatabaseService] updateLastMessage failed:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Add a participant to a conversation.
+   */
+  static async addParticipant(conversationId: string, userId: string): Promise<void> {
+    try {
+      const conv = await this.getConversation(conversationId)
+      if (!conv) throw new Error('Conversation not found')
+      const participants = conv.participant_user_ids ?? []
+      if (!participants.includes(userId)) {
+        participants.push(userId)
+        await setDocument(getSharedConversations(), conversationId, {
+          participant_user_ids: participants,
+          updated_at: new Date().toISOString(),
+        }, { merge: true })
+      }
+    } catch (error) {
+      console.error('[ConversationDatabaseService] addParticipant failed:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Remove a participant from a conversation.
+   */
+  static async removeParticipant(conversationId: string, userId: string): Promise<void> {
+    try {
+      const conv = await this.getConversation(conversationId)
+      if (!conv) throw new Error('Conversation not found')
+      const participants = (conv.participant_user_ids ?? []).filter((id: string) => id !== userId)
+      await setDocument(getSharedConversations(), conversationId, {
+        participant_user_ids: participants,
+        updated_at: new Date().toISOString(),
+      }, { merge: true })
+    } catch (error) {
+      console.error('[ConversationDatabaseService] removeParticipant failed:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Delete a conversation.
+   */
+  static async deleteConversation(conversationId: string): Promise<void> {
+    try {
+      await deleteDocument(getSharedConversations(), conversationId)
+    } catch (error) {
+      console.error('[ConversationDatabaseService] deleteConversation failed:', error)
+      throw error
     }
   }
 }

@@ -54,11 +54,9 @@ export async function listConversations(
  * Get a single conversation by ID.
  */
 export async function getConversation(conversationId: string): Promise<Conversation | null> {
-  // Stub: Firestore read
-  // const docSnap = await getDoc(doc(db, 'conversations', conversationId))
-  // return docSnap.exists() ? (docSnap.data() as Conversation) : null
-  void conversationId
-  return null
+  const res = await fetch(`/api/conversations/${conversationId}`)
+  if (!res.ok) return null
+  return res.json()
 }
 
 /**
@@ -68,13 +66,11 @@ export async function updateLastMessage(
   conversationId: string,
   preview: MessagePreview
 ): Promise<void> {
-  // Stub: Firestore update
-  // await updateDoc(doc(db, 'conversations', conversationId), {
-  //   last_message: preview,
-  //   updated_at: new Date().toISOString(),
-  // })
-  void conversationId
-  void preview
+  await fetch(`/api/conversations/${conversationId}/last-message`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(preview),
+  })
 }
 
 /**
@@ -84,12 +80,11 @@ export async function addParticipant(
   conversationId: string,
   userId: string
 ): Promise<void> {
-  // Stub: Firestore arrayUnion
-  // await updateDoc(doc(db, 'conversations', conversationId), {
-  //   participant_ids: arrayUnion(userId),
-  // })
-  void conversationId
-  void userId
+  await fetch(`/api/conversations/${conversationId}/participants`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
 }
 
 /**
@@ -99,19 +94,16 @@ export async function removeParticipant(
   conversationId: string,
   userId: string
 ): Promise<void> {
-  // Stub: Firestore arrayRemove
-  // await updateDoc(doc(db, 'conversations', conversationId), {
-  //   participant_ids: arrayRemove(userId),
-  // })
-  void conversationId
-  void userId
+  await fetch(`/api/conversations/${conversationId}/participants/${userId}`, {
+    method: 'DELETE',
+  })
 }
 
 /**
  * Delete a conversation (soft-delete via flag, or hard delete).
  */
 export async function deleteConversation(conversationId: string): Promise<void> {
-  // Stub: Firestore delete
-  // await deleteDoc(doc(db, 'conversations', conversationId))
-  void conversationId
+  await fetch(`/api/conversations/${conversationId}`, {
+    method: 'DELETE',
+  })
 }

@@ -19,7 +19,7 @@ export const Route = createFileRoute('/ghost')({
     try {
       const user = await getAuthSession()
       if (!user) return { initialGhosts: [] }
-      const ghosts = await GhostDatabaseService.listGhosts()
+      const ghosts = await GhostDatabaseService.listGhosts(user.uid)
       return { initialGhosts: ghosts }
     } catch {
       return { initialGhosts: [] }

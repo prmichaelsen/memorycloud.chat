@@ -10,12 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VoidRouteImport } from './routes/void'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as GhostRouteImport } from './routes/ghost'
 import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as ConversationsIndexRouteImport } from './routes/conversations/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as ConversationsConversationIdRouteImport } from './routes/conversations/$conversationId'
@@ -30,17 +32,25 @@ import { Route as ApiSpacesFeedRouteImport } from './routes/api/spaces/feed'
 import { Route as ApiNotificationsUnreadCountRouteImport } from './routes/api/notifications/unread-count'
 import { Route as ApiNotificationsReadAllRouteImport } from './routes/api/notifications/read-all'
 import { Route as ApiNotificationsIdRouteImport } from './routes/api/notifications/$id'
+import { Route as ApiConversationsConversationIdRouteImport } from './routes/api/conversations/$conversationId'
 import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiGhostsConversationsIndexRouteImport } from './routes/api/ghosts/conversations/index'
 import { Route as ApiNotificationsIdReadRouteImport } from './routes/api/notifications/$id.read'
 import { Route as ApiGhostsGhostIdConversationRouteImport } from './routes/api/ghosts/$ghostId.conversation'
+import { Route as ApiConversationsConversationIdParticipantsRouteImport } from './routes/api/conversations/$conversationId.participants'
+import { Route as ApiConversationsConversationIdLastMessageRouteImport } from './routes/api/conversations/$conversationId.last-message'
 import { Route as ApiGhostsConversationsConversationIdMessagesRouteImport } from './routes/api/ghosts/conversations/$conversationId.messages'
 
 const VoidRoute = VoidRouteImport.update({
   id: '/void',
   path: '/void',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MemoriesRoute = MemoriesRouteImport.update({
@@ -72,6 +82,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const ConversationsIndexRoute = ConversationsIndexRouteImport.update({
   id: '/',
@@ -145,6 +160,12 @@ const ApiNotificationsIdRoute = ApiNotificationsIdRouteImport.update({
   path: '/api/notifications/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiConversationsConversationIdRoute =
+  ApiConversationsConversationIdRouteImport.update({
+    id: '/api/conversations/$conversationId',
+    path: '/api/conversations/$conversationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthSessionRoute = ApiAuthSessionRouteImport.update({
   id: '/api/auth/session',
   path: '/api/auth/session',
@@ -177,6 +198,18 @@ const ApiGhostsGhostIdConversationRoute =
     path: '/api/ghosts/$ghostId/conversation',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiConversationsConversationIdParticipantsRoute =
+  ApiConversationsConversationIdParticipantsRouteImport.update({
+    id: '/participants',
+    path: '/participants',
+    getParentRoute: () => ApiConversationsConversationIdRoute,
+  } as any)
+const ApiConversationsConversationIdLastMessageRoute =
+  ApiConversationsConversationIdLastMessageRouteImport.update({
+    id: '/last-message',
+    path: '/last-message',
+    getParentRoute: () => ApiConversationsConversationIdRoute,
+  } as any)
 const ApiGhostsConversationsConversationIdMessagesRoute =
   ApiGhostsConversationsConversationIdMessagesRouteImport.update({
     id: '/api/ghosts/conversations/$conversationId/messages',
@@ -191,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/conversations': typeof ConversationsRouteWithChildren
   '/ghost': typeof GhostRoute
   '/memories': typeof MemoriesRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/void': typeof VoidRoute
   '/api/notifications-ws': typeof ApiNotificationsWsRoute
   '/api/upload': typeof ApiUploadRoute
@@ -199,9 +233,11 @@ export interface FileRoutesByFullPath {
   '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/chat/': typeof ChatIndexRoute
   '/conversations/': typeof ConversationsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/conversations/$conversationId': typeof ApiConversationsConversationIdRouteWithChildren
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
@@ -209,6 +245,8 @@ export interface FileRoutesByFullPath {
   '/api/conversations/': typeof ApiConversationsIndexRoute
   '/api/ghosts/': typeof ApiGhostsIndexRoute
   '/api/notifications/': typeof ApiNotificationsIndexRoute
+  '/api/conversations/$conversationId/last-message': typeof ApiConversationsConversationIdLastMessageRoute
+  '/api/conversations/$conversationId/participants': typeof ApiConversationsConversationIdParticipantsRoute
   '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
@@ -227,9 +265,11 @@ export interface FileRoutesByTo {
   '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/chat': typeof ChatIndexRoute
   '/conversations': typeof ConversationsIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/conversations/$conversationId': typeof ApiConversationsConversationIdRouteWithChildren
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
@@ -237,6 +277,8 @@ export interface FileRoutesByTo {
   '/api/conversations': typeof ApiConversationsIndexRoute
   '/api/ghosts': typeof ApiGhostsIndexRoute
   '/api/notifications': typeof ApiNotificationsIndexRoute
+  '/api/conversations/$conversationId/last-message': typeof ApiConversationsConversationIdLastMessageRoute
+  '/api/conversations/$conversationId/participants': typeof ApiConversationsConversationIdParticipantsRoute
   '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations': typeof ApiGhostsConversationsIndexRoute
@@ -250,6 +292,7 @@ export interface FileRoutesById {
   '/conversations': typeof ConversationsRouteWithChildren
   '/ghost': typeof GhostRoute
   '/memories': typeof MemoriesRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/void': typeof VoidRoute
   '/api/notifications-ws': typeof ApiNotificationsWsRoute
   '/api/upload': typeof ApiUploadRoute
@@ -258,9 +301,11 @@ export interface FileRoutesById {
   '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/chat/': typeof ChatIndexRoute
   '/conversations/': typeof ConversationsIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/conversations/$conversationId': typeof ApiConversationsConversationIdRouteWithChildren
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
@@ -268,6 +313,8 @@ export interface FileRoutesById {
   '/api/conversations/': typeof ApiConversationsIndexRoute
   '/api/ghosts/': typeof ApiGhostsIndexRoute
   '/api/notifications/': typeof ApiNotificationsIndexRoute
+  '/api/conversations/$conversationId/last-message': typeof ApiConversationsConversationIdLastMessageRoute
+  '/api/conversations/$conversationId/participants': typeof ApiConversationsConversationIdParticipantsRoute
   '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
@@ -282,6 +329,7 @@ export interface FileRouteTypes {
     | '/conversations'
     | '/ghost'
     | '/memories'
+    | '/settings'
     | '/void'
     | '/api/notifications-ws'
     | '/api/upload'
@@ -290,9 +338,11 @@ export interface FileRouteTypes {
     | '/conversations/$conversationId'
     | '/chat/'
     | '/conversations/'
+    | '/settings/'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/session'
+    | '/api/conversations/$conversationId'
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
@@ -300,6 +350,8 @@ export interface FileRouteTypes {
     | '/api/conversations/'
     | '/api/ghosts/'
     | '/api/notifications/'
+    | '/api/conversations/$conversationId/last-message'
+    | '/api/conversations/$conversationId/participants'
     | '/api/ghosts/$ghostId/conversation'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations/'
@@ -318,9 +370,11 @@ export interface FileRouteTypes {
     | '/conversations/$conversationId'
     | '/chat'
     | '/conversations'
+    | '/settings'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/session'
+    | '/api/conversations/$conversationId'
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
@@ -328,6 +382,8 @@ export interface FileRouteTypes {
     | '/api/conversations'
     | '/api/ghosts'
     | '/api/notifications'
+    | '/api/conversations/$conversationId/last-message'
+    | '/api/conversations/$conversationId/participants'
     | '/api/ghosts/$ghostId/conversation'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations'
@@ -340,6 +396,7 @@ export interface FileRouteTypes {
     | '/conversations'
     | '/ghost'
     | '/memories'
+    | '/settings'
     | '/void'
     | '/api/notifications-ws'
     | '/api/upload'
@@ -348,9 +405,11 @@ export interface FileRouteTypes {
     | '/conversations/$conversationId'
     | '/chat/'
     | '/conversations/'
+    | '/settings/'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/session'
+    | '/api/conversations/$conversationId'
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
@@ -358,6 +417,8 @@ export interface FileRouteTypes {
     | '/api/conversations/'
     | '/api/ghosts/'
     | '/api/notifications/'
+    | '/api/conversations/$conversationId/last-message'
+    | '/api/conversations/$conversationId/participants'
     | '/api/ghosts/$ghostId/conversation'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations/'
@@ -371,6 +432,7 @@ export interface RootRouteChildren {
   ConversationsRoute: typeof ConversationsRouteWithChildren
   GhostRoute: typeof GhostRoute
   MemoriesRoute: typeof MemoriesRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   VoidRoute: typeof VoidRoute
   ApiNotificationsWsRoute: typeof ApiNotificationsWsRoute
   ApiUploadRoute: typeof ApiUploadRoute
@@ -378,6 +440,7 @@ export interface RootRouteChildren {
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
+  ApiConversationsConversationIdRoute: typeof ApiConversationsConversationIdRouteWithChildren
   ApiNotificationsIdRoute: typeof ApiNotificationsIdRouteWithChildren
   ApiNotificationsReadAllRoute: typeof ApiNotificationsReadAllRoute
   ApiNotificationsUnreadCountRoute: typeof ApiNotificationsUnreadCountRoute
@@ -397,6 +460,13 @@ declare module '@tanstack/react-router' {
       path: '/void'
       fullPath: '/void'
       preLoaderRoute: typeof VoidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/memories': {
@@ -440,6 +510,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/conversations/': {
       id: '/conversations/'
@@ -539,6 +616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotificationsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/conversations/$conversationId': {
+      id: '/api/conversations/$conversationId'
+      path: '/api/conversations/$conversationId'
+      fullPath: '/api/conversations/$conversationId'
+      preLoaderRoute: typeof ApiConversationsConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/session': {
       id: '/api/auth/session'
       path: '/api/auth/session'
@@ -581,6 +665,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGhostsGhostIdConversationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/conversations/$conversationId/participants': {
+      id: '/api/conversations/$conversationId/participants'
+      path: '/participants'
+      fullPath: '/api/conversations/$conversationId/participants'
+      preLoaderRoute: typeof ApiConversationsConversationIdParticipantsRouteImport
+      parentRoute: typeof ApiConversationsConversationIdRoute
+    }
+    '/api/conversations/$conversationId/last-message': {
+      id: '/api/conversations/$conversationId/last-message'
+      path: '/last-message'
+      fullPath: '/api/conversations/$conversationId/last-message'
+      preLoaderRoute: typeof ApiConversationsConversationIdLastMessageRouteImport
+      parentRoute: typeof ApiConversationsConversationIdRoute
+    }
     '/api/ghosts/conversations/$conversationId/messages': {
       id: '/api/ghosts/conversations/$conversationId/messages'
       path: '/api/ghosts/conversations/$conversationId/messages'
@@ -617,6 +715,36 @@ const ConversationsRouteWithChildren = ConversationsRoute._addFileChildren(
   ConversationsRouteChildren,
 )
 
+interface SettingsRouteChildren {
+  SettingsIndexRoute: typeof SettingsIndexRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsIndexRoute: SettingsIndexRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
+interface ApiConversationsConversationIdRouteChildren {
+  ApiConversationsConversationIdLastMessageRoute: typeof ApiConversationsConversationIdLastMessageRoute
+  ApiConversationsConversationIdParticipantsRoute: typeof ApiConversationsConversationIdParticipantsRoute
+}
+
+const ApiConversationsConversationIdRouteChildren: ApiConversationsConversationIdRouteChildren =
+  {
+    ApiConversationsConversationIdLastMessageRoute:
+      ApiConversationsConversationIdLastMessageRoute,
+    ApiConversationsConversationIdParticipantsRoute:
+      ApiConversationsConversationIdParticipantsRoute,
+  }
+
+const ApiConversationsConversationIdRouteWithChildren =
+  ApiConversationsConversationIdRoute._addFileChildren(
+    ApiConversationsConversationIdRouteChildren,
+  )
+
 interface ApiNotificationsIdRouteChildren {
   ApiNotificationsIdReadRoute: typeof ApiNotificationsIdReadRoute
 }
@@ -635,6 +763,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConversationsRoute: ConversationsRouteWithChildren,
   GhostRoute: GhostRoute,
   MemoriesRoute: MemoriesRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   VoidRoute: VoidRoute,
   ApiNotificationsWsRoute: ApiNotificationsWsRoute,
   ApiUploadRoute: ApiUploadRoute,
@@ -642,6 +771,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,
+  ApiConversationsConversationIdRoute:
+    ApiConversationsConversationIdRouteWithChildren,
   ApiNotificationsIdRoute: ApiNotificationsIdRouteWithChildren,
   ApiNotificationsReadAllRoute: ApiNotificationsReadAllRoute,
   ApiNotificationsUnreadCountRoute: ApiNotificationsUnreadCountRoute,

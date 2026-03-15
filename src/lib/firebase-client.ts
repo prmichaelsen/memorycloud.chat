@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInAnonymously,
+  signOut as firebaseSignOut,
   sendPasswordResetEmail,
   type Auth,
   type User,
@@ -60,6 +61,12 @@ export async function signInAnon() {
   initializeFirebase()
   if (!auth) throw new Error('Firebase not initialized')
   return signInAnonymously(auth)
+}
+
+export async function signOut() {
+  initializeFirebase()
+  if (!auth) throw new Error('Firebase not initialized')
+  return firebaseSignOut(auth)
 }
 
 export async function resetPassword(email: string) {

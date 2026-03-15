@@ -10,6 +10,7 @@ import { Menu, X, LogOut, User, Settings } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useTheme, type ThemeName } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
+import { signOut } from '@/lib/firebase-client'
 import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
 import type { Notification } from '@/types/notifications'
@@ -69,11 +70,12 @@ export function UnifiedHeader({
   const handleLogout = async () => {
     setAvatarMenuOpen(false)
     try {
+      await signOut()
       await fetch('/api/auth/logout', { method: 'POST' })
-      window.location.href = '/login'
     } catch {
       // Best effort
     }
+    window.location.href = '/auth'
   }
 
   return (

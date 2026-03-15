@@ -16,7 +16,7 @@ export const Route = createFileRoute('/memories')({
     try {
       const user = await getAuthSession()
       if (!user) return { initialMemories: [] }
-      const result = await MemoryDatabaseService.getFeed({
+      const result = await MemoryDatabaseService.getFeed(user.uid, {
         algorithm: 'smart',
         scope: 'all',
         query: null,
