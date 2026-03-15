@@ -1,0 +1,6 @@
+{
+  "name": "@prmichaelsen/remember-enterprise",
+  "scripts": {
+    "wrangler": "export $(cat .env.cloudflare.local | xargs) && wrangler"
+  }
+}
