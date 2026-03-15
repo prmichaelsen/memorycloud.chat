@@ -8,40 +8,54 @@ export const Route = createFileRoute('/api/users/search')({
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         initFirebaseAdmin()
+
         const session = await getServerSession(request)
-        if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        if (!session) {
+          return Response.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
         const url = new URL(request.url)
-        const query = url.searchParams.get('q') ?? ''
-        const limit = parseInt(url.searchParams.get('limit') ?? '10', 10)
+        const q = url.searchParams.get('q')?.trim() ?? ''
 
-        if (!query || query.length < 2) {
+        if (!q) {
           return Response.json({ users: [] })
         }
 
         try {
-          // Search users by email prefix in shared Firestore
-          const results = await queryDocuments('agentbase.users', {
+          // Query Firestore users collection.
+          // Firestore doesn't support native full-text search, so we use
+          // a prefix range query on displayName as a reasonable approximation.
+          const upperBound = q.slice(0, -1) + String.fromCharCode(q.charCodeAt(q.length - 1) + 1)
+
+          const docs = await queryDocuments('agentbase.users', {
             where: [
-              { field: 'email', op: '>=', value: query },
-              { field: 'email', op: '<=', value: query + '\uf8ff' },
+              { field: 'displayName', op: '>=', value: q },
+              { field: 'displayName', op: '<', value: upperBound },
             ],
-            limit,
+            limit: 20,
           })
 
-          const users = (results ?? [])
-            .filter((doc: any) => doc.id !== session.uid)
-            .map((doc: any) => ({
+          const users = docs.map((doc) => {
+            const data = doc.data as Record<string, unknown>
+            return {
               uid: doc.id,
-              email: doc.email ?? null,
-              displayName: doc.display_name ?? doc.displayName ?? null,
-              photoURL: doc.photo_url ?? doc.photoURL ?? null,
-            }))
+              displayName: data.displayName ?? null,
+              email: data.email ?? null,
+              photoURL: data.photoURL ?? null,
+            }
+          })
 
           return Response.json({ users })
         } catch (error) {
-          console.error('[api/users/search]', error)
-          return Response.json({ users: [] })
+          console.error('[API] User search error:', error)
+          return Response.json(
+            {
+              error: 'Internal server error',
+              message:
+                error instanceof Error ? error.message : 'Unknown error',
+            },
+            { status: 500 },
+          )
         }
       },
     },
