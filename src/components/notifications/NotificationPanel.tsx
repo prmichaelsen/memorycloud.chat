@@ -1,16 +1,13 @@
-import { Trash2, Bell } from 'lucide-react'
+/**
+ * NotificationPanel — dropdown list of recent notifications.
+ * Uses t.notificationUnread / t.notificationRead for read-state styling.
+ * "Mark all as read" action. Click notification navigates to conversation.
+ * Real-time updates via WebSocket sync badge count across tabs.
+ */
 
-/** Generic notification interface */
-export interface Notification {
-  id: string
-  type: string
-  title: string
-  message: string
-  isRead: boolean
-  createdAt: string
-  /** Optional data payload (e.g., { link: '/some/path' }) */
-  data?: Record<string, unknown>
-}
+import { Bell, Check, MessageSquare, Brain, Ghost, AtSign, Trash2 } from 'lucide-react'
+import { useTheme } from '@/lib/theming'
+import type { Notification, NotificationType } from '@/types/notifications'
 
 interface NotificationPanelProps {
   notifications: Notification[]
@@ -18,12 +15,24 @@ interface NotificationPanelProps {
   onMarkAllAsRead: () => Promise<void>
   onDelete: (id: string) => Promise<void>
   onClose: () => void
-  /** Optional icon resolver — receives notification type, returns a React node */
-  getIcon?: (type: string) => React.ReactNode
+  onNotificationClick?: (notification: Notification) => void
 }
 
-function defaultGetIcon(_type: string) {
-  return <Bell className="w-4 h-4 text-text-secondary" />
+function getNotificationIcon(type: NotificationType) {
+  switch (type) {
+    case 'new_dm':
+      return <MessageSquare className="w-4 h-4 text-brand-primary" />
+    case 'group_message':
+      return <MessageSquare className="w-4 h-4 text-brand-secondary" />
+    case 'agent_response':
+      return <Ghost className="w-4 h-4 text-brand-accent" />
+    case 'mention':
+      return <AtSign className="w-4 h-4 text-brand-warning" />
+    case 'memory_saved':
+      return <Brain className="w-4 h-4 text-brand-success" />
+    default:
+      return <Bell className="w-4 h-4 text-text-secondary" />
+  }
 }
 
 function timeAgo(dateStr: string): string {
@@ -47,34 +56,45 @@ export function NotificationPanel({
   onMarkAllAsRead,
   onDelete,
   onClose,
-  getIcon = defaultGetIcon,
+  onNotificationClick,
 }: NotificationPanelProps) {
+  const t = useTheme()
+
+  const hasUnread = notifications.some((n) => !n.read)
+
   const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.isRead) {
+    if (!notification.read) {
       await onMarkAsRead(notification.id)
     }
 
-    // Navigate if link is available
-    const link = notification.data?.link as string | undefined
-    if (link) {
+    if (onNotificationClick) {
+      onNotificationClick(notification)
       onClose()
-      window.location.href = link
+    } else if (notification.conversation_id) {
+      // Default: navigate to conversation
+      onClose()
+      window.location.href = `/chat/${notification.conversation_id}`
     }
   }
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 max-h-96 bg-bg-card border border-border-default rounded-xl shadow-lg overflow-hidden z-50">
+    <div
+      className={`absolute right-0 top-full mt-2 w-80 max-h-96 ${t.card} shadow-lg overflow-hidden z-50`}
+      role="dialog"
+      aria-label="Notifications"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border-default">
-        <h3 className="text-sm font-semibold text-text-primary">
+      <div className={`flex items-center justify-between px-4 py-3 ${t.borderSubtle} border-b`}>
+        <h3 className={`text-sm font-semibold ${t.textPrimary}`}>
           Notifications
         </h3>
-        {notifications.some((n) => !n.isRead) && (
+        {hasUnread && (
           <button
             type="button"
             onClick={onMarkAllAsRead}
-            className="text-xs text-primary hover:text-bridge transition-colors"
+            className="flex items-center gap-1 text-xs text-brand-primary hover:text-brand-primary/80 transition-colors"
           >
+            <Check className="w-3 h-3" />
             Mark all read
           </button>
         )}
@@ -84,16 +104,16 @@ export function NotificationPanel({
       <div className="overflow-y-auto max-h-80">
         {notifications.length === 0 ? (
           <div className="px-4 py-8 text-center">
-            <Bell className="w-8 h-8 text-text-muted mx-auto mb-2" />
-            <p className="text-sm text-text-muted">No notifications</p>
+            <Bell className={`w-8 h-8 ${t.textMuted} mx-auto mb-2`} />
+            <p className={`text-sm ${t.textMuted}`}>No notifications</p>
           </div>
         ) : (
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-bg-elevated transition-colors border-b border-border-subtle ${
-                !notification.isRead ? 'bg-surface/10' : ''
-              }`}
+              className={`group flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors border-b ${t.borderSubtle} ${
+                !notification.read ? t.notificationUnread : t.notificationRead
+              } ${t.hover}`}
               onClick={() => handleNotificationClick(notification)}
               role="button"
               tabIndex={0}
@@ -103,32 +123,32 @@ export function NotificationPanel({
             >
               {/* Icon */}
               <div className="mt-0.5 shrink-0">
-                {getIcon(notification.type)}
+                {getNotificationIcon(notification.type)}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
                 <p
                   className={`text-sm leading-tight ${
-                    !notification.isRead
-                      ? 'font-medium text-text-primary'
-                      : 'text-text-secondary'
+                    !notification.read
+                      ? `font-medium ${t.textPrimary}`
+                      : t.textSecondary
                   }`}
                 >
                   {notification.title}
                 </p>
-                <p className="text-xs text-text-muted mt-0.5 truncate">
-                  {notification.message}
+                <p className={`text-xs ${t.textMuted} mt-0.5 truncate`}>
+                  {notification.body}
                 </p>
-                <p className="text-[10px] text-text-muted mt-1">
-                  {timeAgo(notification.createdAt)}
+                <p className={`text-[10px] ${t.textMuted} mt-1`}>
+                  {timeAgo(notification.created_at)}
                 </p>
               </div>
 
               {/* Unread dot + delete */}
               <div className="flex items-center gap-1 shrink-0">
-                {!notification.isRead && (
-                  <div className="w-2 h-2 rounded-full bg-primary" />
+                {!notification.read && (
+                  <div className="w-2 h-2 rounded-full bg-brand-primary" />
                 )}
                 <button
                   type="button"
@@ -136,7 +156,7 @@ export function NotificationPanel({
                     e.stopPropagation()
                     onDelete(notification.id)
                   }}
-                  className="p-1 text-text-muted hover:text-danger transition-colors opacity-0 group-hover:opacity-100"
+                  className={`p-1 ${t.textMuted} hover:text-brand-danger transition-colors opacity-0 group-hover:opacity-100`}
                   aria-label="Delete notification"
                 >
                   <Trash2 className="w-3 h-3" />

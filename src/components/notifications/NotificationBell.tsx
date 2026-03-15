@@ -1,7 +1,15 @@
+/**
+ * NotificationBell — bell icon in header with unread count badge.
+ * Uses t.notificationBadge from ThemingProvider for badge styling.
+ * Click toggles the NotificationPanel dropdown.
+ * Real-time: WebSocket `notification` events update badge count instantly.
+ */
+
 import { Bell } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { useTheme } from '@/lib/theming'
 import { NotificationPanel } from './NotificationPanel'
-import type { Notification } from './NotificationPanel'
+import type { Notification } from '@/types/notifications'
 
 interface NotificationBellProps {
   /** Current unread notification count */
@@ -14,8 +22,8 @@ interface NotificationBellProps {
   onMarkAllAsRead: () => Promise<void>
   /** Called when a notification is deleted */
   onDelete: (id: string) => Promise<void>
-  /** Optional icon resolver by notification type */
-  getIcon?: (type: string) => React.ReactNode
+  /** Called when a notification is clicked — navigate to conversation */
+  onNotificationClick?: (notification: Notification) => void
 }
 
 export function NotificationBell({
@@ -24,10 +32,11 @@ export function NotificationBell({
   onMarkAsRead,
   onMarkAllAsRead,
   onDelete,
-  getIcon,
+  onNotificationClick,
 }: NotificationBellProps) {
   const [panelOpen, setPanelOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const t = useTheme()
 
   // Close panel on click outside
   useEffect(() => {
@@ -41,17 +50,32 @@ export function NotificationBell({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [panelOpen])
 
+  // Close panel on Escape
+  useEffect(() => {
+    if (!panelOpen) return
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setPanelOpen(false)
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [panelOpen])
+
   return (
     <div ref={containerRef} className="relative">
       <button
         type="button"
         onClick={() => setPanelOpen(!panelOpen)}
-        className="relative p-2 text-text-secondary hover:text-text-primary transition-colors"
-        aria-label="Notifications"
+        className={`relative p-2 ${t.textSecondary} hover:${t.textPrimary} transition-colors`}
+        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+        aria-expanded={panelOpen}
+        aria-haspopup="true"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+          <span
+            className={`absolute -top-0.5 -right-0.5 ${t.notificationBadge} text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1`}
+            aria-hidden="true"
+          >
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -64,7 +88,7 @@ export function NotificationBell({
           onMarkAllAsRead={onMarkAllAsRead}
           onDelete={onDelete}
           onClose={() => setPanelOpen(false)}
-          getIcon={getIcon}
+          onNotificationClick={onNotificationClick}
         />
       )}
     </div>

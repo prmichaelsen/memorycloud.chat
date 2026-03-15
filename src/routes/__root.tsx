@@ -1,10 +1,20 @@
+/**
+ * Root Route — wraps app in AuthProvider + ThemingProvider.
+ * Includes AppShell for authenticated routes.
+ * Wires up theme toggle state with localStorage persistence.
+ */
+
+import { useState } from 'react'
 import {
   HeadContent,
   Scripts,
   createRootRoute,
   Outlet,
 } from '@tanstack/react-router'
-import { ThemingProvider } from '@/lib/theming'
+import { ThemingProvider, type ThemeName } from '@/lib/theming'
+import { AuthProvider } from '@/components/auth/AuthContext'
+import { AppShell } from '@/components/layout/AppShell'
+import { getStoredTheme } from '@/components/layout/ThemeToggle'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -13,7 +23,6 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
   beforeLoad: async () => {
     // SSR preload pattern: auth session loaded server-side
-    // Auth integration will be added in Task 4
     return { initialUser: null }
   },
   head: () => ({
@@ -56,11 +65,13 @@ function NotFound() {
 }
 
 function RootLayout() {
+  const [theme, setTheme] = useState<ThemeName>(() => getStoredTheme())
+
   return (
-    <ThemingProvider theme="dark">
-      <div className="min-h-screen">
-        <Outlet />
-      </div>
-    </ThemingProvider>
+    <AuthProvider>
+      <ThemingProvider theme={theme}>
+        <AppShell currentTheme={theme} onThemeToggle={setTheme} />
+      </ThemingProvider>
+    </AuthProvider>
   )
 }
