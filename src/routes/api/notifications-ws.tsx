@@ -1,4 +1,5 @@
 import { createAPIFileRoute } from '@tanstack/start/api'
+import { getServerSession } from '@/lib/auth/session'
 import { env } from 'cloudflare:workers'
 
 export const APIRoute = createAPIFileRoute('/api/notifications-ws')({
@@ -9,19 +10,28 @@ export const APIRoute = createAPIFileRoute('/api/notifications-ws')({
     }
 
     try {
-      // TODO: Replace with your auth session check
-      // const session = await getServerSession(request)
-      // if (!session?.user) {
-      //   return new Response('Unauthorized', { status: 401 })
-      // }
-      // const userId = session.user.id
+      // Auth check — reject unauthenticated WebSocket upgrades
+      const session = await getServerSession(request)
+      if (!session) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      const userId = session.uid
 
       // Forward WebSocket upgrade to user's NotificationHub DO
-      // const id = (env as any).NOTIFICATION_HUB.idFromName(userId)
-      // const stub = (env as any).NOTIFICATION_HUB.get(id)
-      // return stub.fetch(request)
+      const notificationHubBinding = (env as any).NOTIFICATION_HUB as DurableObjectNamespace
+      const id = notificationHubBinding.idFromName(userId)
+      const stub = notificationHubBinding.get(id)
 
-      return new Response('Not implemented — wire up auth and DO binding', { status: 501 })
+      // Forward the upgrade request, passing userId as a query param
+      const doUrl = new URL(request.url)
+      doUrl.pathname = '/websocket'
+      doUrl.searchParams.set('userId', userId)
+
+      return stub.fetch(
+        new Request(doUrl.toString(), {
+          headers: request.headers,
+        }),
+      )
     } catch {
       return new Response('Internal Server Error', { status: 500 })
     }

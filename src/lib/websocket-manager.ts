@@ -16,19 +16,22 @@ export class WebSocketManager {
   private retryCount = 0
   private retryTimer: ReturnType<typeof setTimeout> | null = null
   private disposed = false
+  private authFailed = false
 
   constructor(config: WebSocketConfig) {
     this.config = config
   }
 
   connect() {
-    if (this.disposed) return
+    if (this.disposed || this.authFailed) return
     this.setStatus('connecting')
 
     try {
       this.ws = new WebSocket(this.config.url)
+      let didOpen = false
 
       this.ws.onopen = () => {
+        didOpen = true
         this.retryCount = 0
         this.setStatus('connected')
       }
@@ -44,8 +47,16 @@ export class WebSocketManager {
         }
       }
 
-      this.ws.onclose = () => {
+      this.ws.onclose = (event) => {
         this.setStatus('disconnected')
+        // If the connection was rejected before opening and the close reason
+        // indicates an auth failure, stop retrying. Servers return 401 which
+        // manifests as code 1006 (abnormal closure) without ever opening.
+        // We also check for an explicit "Unauthorized" reason if provided.
+        if (!didOpen && event.reason === 'Unauthorized') {
+          this.authFailed = true
+          return
+        }
         this.scheduleReconnect()
       }
 
@@ -89,7 +100,7 @@ export class WebSocketManager {
   }
 
   private scheduleReconnect() {
-    if (this.disposed) return
+    if (this.disposed || this.authFailed) return
     if (this.retryCount >= this.config.reconnectMaxRetries) return
 
     const delay = Math.min(
