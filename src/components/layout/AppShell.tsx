@@ -10,6 +10,7 @@ import { Outlet, useRouter, useMatches } from '@tanstack/react-router'
 import { useTheme, type ThemeName } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
 import { useNotifications } from '@/hooks/useNotifications'
+import { NotificationClientService } from '@/services/notification-client.service'
 import { UnifiedHeader, HEADER_HEIGHT_CLASS } from './UnifiedHeader'
 import { Sidebar } from './Sidebar'
 import { MobileBottomNav } from './MobileBottomNav'
@@ -47,28 +48,7 @@ export function AppShell({ currentTheme, onThemeToggle }: AppShellProps) {
     deleteNotification,
   } = useNotifications(user?.uid, {
     wsUrl: '/api/notifications-ws',
-    api: {
-      fetchNotifications: async ({ limit }) => {
-        const res = await fetch(`/api/notifications?limit=${limit}`)
-        if (!res.ok) return []
-        return res.json()
-      },
-      fetchUnreadCount: async () => {
-        const res = await fetch('/api/notifications/unread-count')
-        if (!res.ok) return 0
-        const data = await res.json()
-        return data.count ?? 0
-      },
-      markAsRead: async (id) => {
-        await fetch(`/api/notifications/${id}/read`, { method: 'POST' })
-      },
-      markAllAsRead: async () => {
-        await fetch('/api/notifications/read-all', { method: 'POST' })
-      },
-      deleteNotification: async (id) => {
-        await fetch(`/api/notifications/${id}`, { method: 'DELETE' })
-      },
-    },
+    api: NotificationClientService,
   })
 
   // Map notification data shape for the panel

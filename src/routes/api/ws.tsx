@@ -3,9 +3,11 @@
  *
  * Usage: GET /api/ws?conversationId=<id>
  * The request must include the Upgrade: websocket header.
+ * Requires an authenticated session.
  */
 
 import { createAPIFileRoute } from '@tanstack/start/api'
+import { getServerSession } from '@/lib/auth/session'
 import { env } from 'cloudflare:workers'
 
 export const APIRoute = createAPIFileRoute('/api/ws')({
@@ -23,17 +25,13 @@ export const APIRoute = createAPIFileRoute('/api/ws')({
     }
 
     try {
-      // TODO: Replace with auth session check
-      // const session = await getServerSession(request)
-      // if (!session?.user) {
-      //   return new Response('Unauthorized', { status: 401 })
-      // }
-      // const userId = session.user.id
-      // const userName = session.user.displayName ?? 'Unknown'
-
-      // Placeholder until auth is wired up
-      const userId = url.searchParams.get('userId') ?? 'anonymous'
-      const userName = url.searchParams.get('userName') ?? 'Anonymous'
+      // Auth check — reject unauthenticated WebSocket upgrades
+      const session = await getServerSession(request)
+      if (!session) {
+        return new Response('Unauthorized', { status: 401 })
+      }
+      const userId = session.uid
+      const userName = session.displayName ?? 'Unknown'
 
       // Get the ChatRoom Durable Object for this conversation
       const chatRoomBinding = (env as any).CHAT_ROOM as DurableObjectNamespace
