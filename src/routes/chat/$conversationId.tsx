@@ -1,10 +1,6 @@
 /**
  * Conversation route — renders the active conversation with messages,
  * compose input, real-time updates via WebSocket, and group member panel.
- *
- * Uses beforeLoad for SSR preload of conversation + initial messages.
- * Implements optimistic UI: messages appear instantly in a "pending" state,
- * then transition to confirmed once the server responds.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -20,46 +16,42 @@ import { listMessages, sendMessage, markConversationRead } from '@/services/mess
 import { checkPermission } from '@/services/group.service'
 import type { Conversation, Message, MessageAttachment } from '@/types/conversations'
 import type { WebSocketMessage, NewMessageEvent, TypingEvent } from '@/types/websocket'
-import { Users, ChevronLeft, Wifi, WifiOff } from 'lucide-react'
+import { Users, Info, ChevronLeft, Wifi, WifiOff } from 'lucide-react'
+import { getAuthSession } from '@/lib/auth/server-fn'
+import { ConversationDatabaseService } from '@/services/conversation-database.service'
+import { MessageDatabaseService } from '@/services/message-database.service'
 
 export const Route = createFileRoute('/chat/$conversationId')({
+  component: ConversationView,
   beforeLoad: async ({ params }) => {
-    const { conversationId } = params
-
-    // SSR preload: fetch conversation metadata and initial messages in parallel
-    const [conversation, messageResult] = await Promise.all([
-      getConversation(conversationId),
-      listMessages({ conversation_id: conversationId, limit: 50 }),
-    ])
-
-    return {
-      preloadedConversation: conversation,
-      // Messages come newest-first from service, reverse for chronological display
-      preloadedMessages: messageResult.messages.reverse(),
-      preloadedHasMore: messageResult.has_more,
+    try {
+      const user = await getAuthSession()
+      if (!user) return { initialConversation: null, initialMessages: [] }
+      const [conversation, msgResult] = await Promise.all([
+        ConversationDatabaseService.getConversation(params.conversationId),
+        MessageDatabaseService.listMessages({ conversation_id: params.conversationId, limit: 50 }),
+      ])
+      return {
+        initialConversation: conversation,
+        initialMessages: msgResult.messages ?? [],
+      }
+    } catch {
+      return { initialConversation: null, initialMessages: [] }
     }
   },
-  component: ConversationView,
 })
 
 function ConversationView() {
   const t = useTheme()
   const { user } = useAuth()
   const { conversationId } = Route.useParams()
-  const {
-    preloadedConversation,
-    preloadedMessages,
-    preloadedHasMore,
-  } = Route.useRouteContext()
 
-  // State — initialize from preloaded data
-  const [conversation, setConversation] = useState<Conversation | null>(
-    preloadedConversation ?? null
-  )
-  const [messages, setMessages] = useState<Message[]>(preloadedMessages ?? [])
-  const [loading, setLoading] = useState(!preloadedConversation)
+  // State
+  const [conversation, setConversation] = useState<Conversation | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(preloadedHasMore ?? false)
+  const [hasMore, setHasMore] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
   const [typingUsers, setTypingUsers] = useState<
     Array<{ user_id: string; user_name: string }>
@@ -69,40 +61,19 @@ function ConversationView() {
     can_kick: boolean
   }>({ can_manage_members: false, can_kick: false })
 
-  // Track pending (optimistic) message IDs
-  const [pendingMessageIds, setPendingMessageIds] = useState<Set<string>>(
-    new Set()
-  )
-
   // WebSocket for real-time
-  const {
-    status: wsStatus,
-    lastMessage: wsMessage,
-    send: wsSend,
-  } = useWebSocket(conversationId)
+  const { status: wsStatus, lastMessage: wsMessage, send: wsSend } = useWebSocket(conversationId)
 
   // Typing indicator debounce refs
-  const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
-    new Map()
-  )
+  const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-  // If preloaded data was missing (e.g. client-side navigation without SSR),
-  // fall back to loading in an effect
+  // Load conversation and initial messages
   useEffect(() => {
     if (!user || !conversationId) return
-    // If we already have preloaded data, just mark as read and load permissions
-    if (preloadedConversation) {
-      markConversationRead(conversationId, user.uid)
-      if (preloadedConversation.type === 'group') {
-        loadPermissions(conversationId, user.uid)
-      }
-      return
-    }
 
     let cancelled = false
 
     async function load() {
-      if (!user) return
       setLoading(true)
       setMessages([])
       setHasMore(false)
@@ -116,13 +87,25 @@ function ConversationView() {
         if (cancelled) return
 
         setConversation(conv)
+        // Messages come newest-first from service, reverse for display
         setMessages(msgResult.messages.reverse())
         setHasMore(msgResult.has_more)
 
+        // Mark as read
         markConversationRead(conversationId, user.uid)
 
+        // Load permissions for group conversations
         if (conv?.type === 'group') {
-          await loadPermissions(conversationId, user.uid)
+          const [canManage, canKick] = await Promise.all([
+            checkPermission(conversationId, user.uid, 'can_manage_members'),
+            checkPermission(conversationId, user.uid, 'can_kick'),
+          ])
+          if (!cancelled) {
+            setCurrentUserPermissions({
+              can_manage_members: canManage,
+              can_kick: canKick,
+            })
+          }
         }
       } catch {
         // Error loading conversation
@@ -135,22 +118,7 @@ function ConversationView() {
     return () => {
       cancelled = true
     }
-  }, [conversationId, user, preloadedConversation])
-
-  async function loadPermissions(convId: string, userId: string) {
-    try {
-      const [canManage, canKick] = await Promise.all([
-        checkPermission(convId, userId, 'can_manage_members'),
-        checkPermission(convId, userId, 'can_kick'),
-      ])
-      setCurrentUserPermissions({
-        can_manage_members: canManage,
-        can_kick: canKick,
-      })
-    } catch {
-      // Error loading permissions
-    }
-  }
+  }, [conversationId, user])
 
   // Handle incoming WebSocket messages
   useEffect(() => {
@@ -161,7 +129,7 @@ function ConversationView() {
         const event = wsMessage as NewMessageEvent
         if (event.conversation_id !== conversationId) return
 
-        // Build full Message from event
+        // Append new message to list
         const newMsg: Message = {
           id: event.message.id,
           conversation_id: event.conversation_id,
@@ -181,18 +149,7 @@ function ConversationView() {
           saved_memory_id: null,
         }
 
-        // If this is a confirmation of our own optimistic message, remove pending status
-        // (the optimistic message is already in the list, so just clear pending flag)
-        if (pendingMessageIds.has(event.message.id)) {
-          setPendingMessageIds((prev) => {
-            const next = new Set(prev)
-            next.delete(event.message.id)
-            return next
-          })
-        } else {
-          // Message from another user — append to list
-          setMessages((prev) => [...prev, newMsg])
-        }
+        setMessages((prev) => [...prev, newMsg])
 
         // Update sidebar last_message preview
         updateLastMessage(conversationId, {
@@ -202,7 +159,7 @@ function ConversationView() {
           timestamp: newMsg.created_at,
         })
 
-        // Auto-mark as read
+        // Auto-mark as read if this is the active conversation
         markConversationRead(conversationId, user.uid)
 
         // Clear typing indicator for this sender
@@ -215,17 +172,14 @@ function ConversationView() {
       case 'typing_start': {
         const event = wsMessage as TypingEvent
         if (event.conversation_id !== conversationId) return
-        if (event.user_id === user.uid) return
+        if (event.user_id === user.uid) return // Ignore own typing
 
         setTypingUsers((prev) => {
           if (prev.some((tu) => tu.user_id === event.user_id)) return prev
-          return [
-            ...prev,
-            { user_id: event.user_id, user_name: event.user_name },
-          ]
+          return [...prev, { user_id: event.user_id, user_name: event.user_name }]
         })
 
-        // Auto-clear typing after 3 seconds
+        // Auto-clear typing after 3 seconds (in case typing_stop is missed)
         const existing = typingTimeoutsRef.current.get(event.user_id)
         if (existing) clearTimeout(existing)
 
@@ -256,7 +210,7 @@ function ConversationView() {
         break
       }
     }
-  }, [wsMessage, conversationId, user, pendingMessageIds])
+  }, [wsMessage, conversationId, user])
 
   // Cleanup typing timeouts
   useEffect(() => {
@@ -290,31 +244,9 @@ function ConversationView() {
     }
   }, [conversationId, loadingMore, hasMore, messages])
 
-  // Send message handler with optimistic UI
+  // Send message handler
   async function handleSend(content: string, attachments: MessageAttachment[]) {
     if (!user) return
-
-    // Create an optimistic message shown immediately
-    const optimisticId = crypto.randomUUID()
-    const now = new Date().toISOString()
-    const optimisticMessage: Message = {
-      id: optimisticId,
-      conversation_id: conversationId,
-      sender_id: user.uid,
-      sender_name: user.displayName ?? 'Unknown',
-      sender_photo_url: user.photoURL ?? null,
-      content,
-      created_at: now,
-      updated_at: null,
-      attachments: attachments.length > 0 ? attachments : [],
-      visible_to_user_ids: null,
-      role: 'user',
-      saved_memory_id: null,
-    }
-
-    // Show optimistic message immediately
-    setMessages((prev) => [...prev, optimisticMessage])
-    setPendingMessageIds((prev) => new Set(prev).add(optimisticId))
 
     try {
       const message = await sendMessage({
@@ -326,15 +258,8 @@ function ConversationView() {
         attachments: attachments.length > 0 ? attachments : undefined,
       })
 
-      // Replace optimistic message with server-confirmed message
-      setMessages((prev) =>
-        prev.map((m) => (m.id === optimisticId ? message : m))
-      )
-      setPendingMessageIds((prev) => {
-        const next = new Set(prev)
-        next.delete(optimisticId)
-        return next
-      })
+      // Optimistic: add to local state immediately
+      setMessages((prev) => [...prev, message])
 
       // Broadcast via WebSocket
       const wsMsg: NewMessageEvent = {
@@ -366,13 +291,7 @@ function ConversationView() {
         timestamp: message.created_at,
       })
     } catch {
-      // On failure, mark the optimistic message as failed by removing pending
-      // and keeping it in the list (in production, add retry/remove UI)
-      setPendingMessageIds((prev) => {
-        const next = new Set(prev)
-        next.delete(optimisticId)
-        return next
-      })
+      // Error sending message — in production, show toast and retry
     }
   }
 
@@ -463,10 +382,7 @@ function ConversationView() {
           {/* Connection status */}
           <div className="flex items-center gap-2">
             {wsStatus === 'connected' ? (
-              <Wifi
-                className={`w-4 h-4 ${t.statusOnline}`}
-                style={{ color: 'currentColor' }}
-              />
+              <Wifi className={`w-4 h-4 ${t.statusOnline}`} style={{ color: 'currentColor' }} />
             ) : (
               <WifiOff className={`w-4 h-4 ${t.textMuted}`} />
             )}
@@ -487,7 +403,6 @@ function ConversationView() {
         {/* Messages */}
         <MessageList
           messages={messages}
-          pendingMessageIds={pendingMessageIds}
           loading={loadingMore}
           hasMore={hasMore}
           onLoadMore={loadMore}
