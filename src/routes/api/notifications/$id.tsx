@@ -1,14 +1,18 @@
-import { createAPIFileRoute } from '@tanstack/start/api'
+import { createFileRoute } from '@tanstack/react-router'
 import { getServerSession } from '@/lib/auth/session'
 import { deleteNotification } from '@/services/notification.service'
 
-export const APIRoute = createAPIFileRoute('/api/notifications/$id')({
-  DELETE: async ({ request, params }) => {
-    const session = getServerSession(request)
-    if (!session) return new Response('Unauthorized', { status: 401 })
+export const Route = createFileRoute('/api/notifications/$id')({
+  server: {
+    handlers: {
+      DELETE: async ({ request, params }: { request: Request; params: { id: string } }) => {
+        const session = await getServerSession(request)
+        if (!session) return new Response('Unauthorized', { status: 401 })
 
-    const deleted = await deleteNotification(params.id)
-    if (!deleted) return new Response('Not found', { status: 404 })
-    return Response.json({ deleted: true })
+        const deleted = await deleteNotification(params.id)
+        if (!deleted) return new Response('Not found', { status: 404 })
+        return Response.json({ deleted: true })
+      },
+    },
   },
 })

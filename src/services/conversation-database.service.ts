@@ -165,6 +165,17 @@ export class ConversationDatabaseService {
   }
 
   /**
+   * List conversations — convenience wrapper matching client service interface.
+   * Returns { conversations: [...] } for consistency with ConversationListResult.
+   */
+  static async listConversations(
+    params: { user_id: string; limit?: number },
+  ): Promise<{ conversations: ConversationDoc[] }> {
+    const conversations = await this.getAllConversations(params.user_id, params.limit ?? 50)
+    return { conversations }
+  }
+
+  /**
    * Get a single conversation by ID (tries shared first, then user-scoped).
    */
   static async getConversation(

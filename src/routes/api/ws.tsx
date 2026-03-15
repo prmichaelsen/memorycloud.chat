@@ -6,12 +6,14 @@
  * Requires an authenticated session.
  */
 
-import { createAPIFileRoute } from '@tanstack/start/api'
+import { createFileRoute } from '@tanstack/react-router'
 import { getServerSession } from '@/lib/auth/session'
 import { env } from 'cloudflare:workers'
 
-export const APIRoute = createAPIFileRoute('/api/ws')({
-  GET: async ({ request }) => {
+export const Route = createFileRoute('/api/ws')({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
     // Must be a WebSocket upgrade request
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('Expected WebSocket upgrade', { status: 426 })
@@ -53,5 +55,7 @@ export const APIRoute = createAPIFileRoute('/api/ws')({
     } catch {
       return new Response('Internal Server Error', { status: 500 })
     }
+      },
+    },
   },
 })

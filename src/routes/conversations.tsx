@@ -16,15 +16,19 @@ export const Route = createFileRoute('/conversations')({
   component: ConversationsLayout,
   beforeLoad: async () => {
     try {
+      console.log('[conversations beforeLoad] starting')
       const user = await getAuthSession()
+      console.log('[conversations beforeLoad] user:', user ? { uid: user.uid, email: user.email } : null)
       if (!user) return { initialConversations: [] as ConversationDoc[] }
 
       const result = await ConversationDatabaseService.listConversations({
         user_id: user.uid,
         limit: 100,
       })
+      console.log('[conversations beforeLoad] found', result.conversations.length, 'conversations')
       return { initialConversations: result.conversations }
-    } catch {
+    } catch (err) {
+      console.error('[conversations beforeLoad] error:', err)
       return { initialConversations: [] as ConversationDoc[] }
     }
   },

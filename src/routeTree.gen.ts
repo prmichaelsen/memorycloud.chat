@@ -9,17 +9,40 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VoidRouteImport } from './routes/void'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as GhostRouteImport } from './routes/ghost'
+import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConversationsIndexRouteImport } from './routes/conversations/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as ConversationsConversationIdRouteImport } from './routes/conversations/$conversationId'
 import { Route as ChatConversationIdRouteImport } from './routes/chat/$conversationId'
+import { Route as ApiWsRouteImport } from './routes/api/ws'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
+import { Route as ApiNotificationsWsRouteImport } from './routes/api/notifications-ws'
+import { Route as ApiNotificationsIndexRouteImport } from './routes/api/notifications/index'
+import { Route as ApiGhostsIndexRouteImport } from './routes/api/ghosts/index'
+import { Route as ApiConversationsIndexRouteImport } from './routes/api/conversations/index'
+import { Route as ApiSpacesFeedRouteImport } from './routes/api/spaces/feed'
+import { Route as ApiNotificationsUnreadCountRouteImport } from './routes/api/notifications/unread-count'
+import { Route as ApiNotificationsReadAllRouteImport } from './routes/api/notifications/read-all'
+import { Route as ApiNotificationsIdRouteImport } from './routes/api/notifications/$id'
 import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
+import { Route as ApiGhostsConversationsIndexRouteImport } from './routes/api/ghosts/conversations/index'
+import { Route as ApiNotificationsIdReadRouteImport } from './routes/api/notifications/$id.read'
+import { Route as ApiGhostsGhostIdConversationRouteImport } from './routes/api/ghosts/$ghostId.conversation'
+import { Route as ApiGhostsConversationsConversationIdMessagesRouteImport } from './routes/api/ghosts/conversations/$conversationId.messages'
 
+const VoidRoute = VoidRouteImport.update({
+  id: '/void',
+  path: '/void',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MemoriesRoute = MemoriesRouteImport.update({
   id: '/memories',
   path: '/memories',
@@ -28,6 +51,11 @@ const MemoriesRoute = MemoriesRouteImport.update({
 const GhostRoute = GhostRouteImport.update({
   id: '/ghost',
   path: '/ghost',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConversationsRoute = ConversationsRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -45,15 +73,77 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConversationsIndexRoute = ConversationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConversationsRoute,
+} as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ChatRoute,
 } as any)
+const ConversationsConversationIdRoute =
+  ConversationsConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => ConversationsRoute,
+  } as any)
 const ChatConversationIdRoute = ChatConversationIdRouteImport.update({
   id: '/$conversationId',
   path: '/$conversationId',
   getParentRoute: () => ChatRoute,
+} as any)
+const ApiWsRoute = ApiWsRouteImport.update({
+  id: '/api/ws',
+  path: '/api/ws',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNotificationsWsRoute = ApiNotificationsWsRouteImport.update({
+  id: '/api/notifications-ws',
+  path: '/api/notifications-ws',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNotificationsIndexRoute = ApiNotificationsIndexRouteImport.update({
+  id: '/api/notifications/',
+  path: '/api/notifications/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGhostsIndexRoute = ApiGhostsIndexRouteImport.update({
+  id: '/api/ghosts/',
+  path: '/api/ghosts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiConversationsIndexRoute = ApiConversationsIndexRouteImport.update({
+  id: '/api/conversations/',
+  path: '/api/conversations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSpacesFeedRoute = ApiSpacesFeedRouteImport.update({
+  id: '/api/spaces/feed',
+  path: '/api/spaces/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNotificationsUnreadCountRoute =
+  ApiNotificationsUnreadCountRouteImport.update({
+    id: '/api/notifications/unread-count',
+    path: '/api/notifications/unread-count',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiNotificationsReadAllRoute = ApiNotificationsReadAllRouteImport.update({
+  id: '/api/notifications/read-all',
+  path: '/api/notifications/read-all',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNotificationsIdRoute = ApiNotificationsIdRouteImport.update({
+  id: '/api/notifications/$id',
+  path: '/api/notifications/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSessionRoute = ApiAuthSessionRouteImport.update({
   id: '/api/auth/session',
@@ -70,42 +160,118 @@ const ApiAuthLoginRoute = ApiAuthLoginRouteImport.update({
   path: '/api/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGhostsConversationsIndexRoute =
+  ApiGhostsConversationsIndexRouteImport.update({
+    id: '/api/ghosts/conversations/',
+    path: '/api/ghosts/conversations/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiNotificationsIdReadRoute = ApiNotificationsIdReadRouteImport.update({
+  id: '/read',
+  path: '/read',
+  getParentRoute: () => ApiNotificationsIdRoute,
+} as any)
+const ApiGhostsGhostIdConversationRoute =
+  ApiGhostsGhostIdConversationRouteImport.update({
+    id: '/api/ghosts/$ghostId/conversation',
+    path: '/api/ghosts/$ghostId/conversation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiGhostsConversationsConversationIdMessagesRoute =
+  ApiGhostsConversationsConversationIdMessagesRouteImport.update({
+    id: '/api/ghosts/conversations/$conversationId/messages',
+    path: '/api/ghosts/conversations/$conversationId/messages',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/conversations': typeof ConversationsRouteWithChildren
   '/ghost': typeof GhostRoute
   '/memories': typeof MemoriesRoute
+  '/void': typeof VoidRoute
+  '/api/notifications-ws': typeof ApiNotificationsWsRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/chat/': typeof ChatIndexRoute
+  '/conversations/': typeof ConversationsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
+  '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
+  '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
+  '/api/spaces/feed': typeof ApiSpacesFeedRoute
+  '/api/conversations/': typeof ApiConversationsIndexRoute
+  '/api/ghosts/': typeof ApiGhostsIndexRoute
+  '/api/notifications/': typeof ApiNotificationsIndexRoute
+  '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
+  '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
+  '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
+  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ghost': typeof GhostRoute
   '/memories': typeof MemoriesRoute
+  '/void': typeof VoidRoute
+  '/api/notifications-ws': typeof ApiNotificationsWsRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/chat': typeof ChatIndexRoute
+  '/conversations': typeof ConversationsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
+  '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
+  '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
+  '/api/spaces/feed': typeof ApiSpacesFeedRoute
+  '/api/conversations': typeof ApiConversationsIndexRoute
+  '/api/ghosts': typeof ApiGhostsIndexRoute
+  '/api/notifications': typeof ApiNotificationsIndexRoute
+  '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
+  '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
+  '/api/ghosts/conversations': typeof ApiGhostsConversationsIndexRoute
+  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/conversations': typeof ConversationsRouteWithChildren
   '/ghost': typeof GhostRoute
   '/memories': typeof MemoriesRoute
+  '/void': typeof VoidRoute
+  '/api/notifications-ws': typeof ApiNotificationsWsRoute
+  '/api/upload': typeof ApiUploadRoute
+  '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/chat/': typeof ChatIndexRoute
+  '/conversations/': typeof ConversationsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
+  '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
+  '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
+  '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
+  '/api/spaces/feed': typeof ApiSpacesFeedRoute
+  '/api/conversations/': typeof ApiConversationsIndexRoute
+  '/api/ghosts/': typeof ApiGhostsIndexRoute
+  '/api/notifications/': typeof ApiNotificationsIndexRoute
+  '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
+  '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
+  '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
+  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -113,51 +279,126 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/chat'
+    | '/conversations'
     | '/ghost'
     | '/memories'
+    | '/void'
+    | '/api/notifications-ws'
+    | '/api/upload'
+    | '/api/ws'
     | '/chat/$conversationId'
+    | '/conversations/$conversationId'
     | '/chat/'
+    | '/conversations/'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/session'
+    | '/api/notifications/$id'
+    | '/api/notifications/read-all'
+    | '/api/notifications/unread-count'
+    | '/api/spaces/feed'
+    | '/api/conversations/'
+    | '/api/ghosts/'
+    | '/api/notifications/'
+    | '/api/ghosts/$ghostId/conversation'
+    | '/api/notifications/$id/read'
+    | '/api/ghosts/conversations/'
+    | '/api/ghosts/conversations/$conversationId/messages'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/ghost'
     | '/memories'
+    | '/void'
+    | '/api/notifications-ws'
+    | '/api/upload'
+    | '/api/ws'
     | '/chat/$conversationId'
+    | '/conversations/$conversationId'
     | '/chat'
+    | '/conversations'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/session'
+    | '/api/notifications/$id'
+    | '/api/notifications/read-all'
+    | '/api/notifications/unread-count'
+    | '/api/spaces/feed'
+    | '/api/conversations'
+    | '/api/ghosts'
+    | '/api/notifications'
+    | '/api/ghosts/$ghostId/conversation'
+    | '/api/notifications/$id/read'
+    | '/api/ghosts/conversations'
+    | '/api/ghosts/conversations/$conversationId/messages'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/chat'
+    | '/conversations'
     | '/ghost'
     | '/memories'
+    | '/void'
+    | '/api/notifications-ws'
+    | '/api/upload'
+    | '/api/ws'
     | '/chat/$conversationId'
+    | '/conversations/$conversationId'
     | '/chat/'
+    | '/conversations/'
     | '/api/auth/login'
     | '/api/auth/logout'
     | '/api/auth/session'
+    | '/api/notifications/$id'
+    | '/api/notifications/read-all'
+    | '/api/notifications/unread-count'
+    | '/api/spaces/feed'
+    | '/api/conversations/'
+    | '/api/ghosts/'
+    | '/api/notifications/'
+    | '/api/ghosts/$ghostId/conversation'
+    | '/api/notifications/$id/read'
+    | '/api/ghosts/conversations/'
+    | '/api/ghosts/conversations/$conversationId/messages'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRouteWithChildren
+  ConversationsRoute: typeof ConversationsRouteWithChildren
   GhostRoute: typeof GhostRoute
   MemoriesRoute: typeof MemoriesRoute
+  VoidRoute: typeof VoidRoute
+  ApiNotificationsWsRoute: typeof ApiNotificationsWsRoute
+  ApiUploadRoute: typeof ApiUploadRoute
+  ApiWsRoute: typeof ApiWsRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
+  ApiNotificationsIdRoute: typeof ApiNotificationsIdRouteWithChildren
+  ApiNotificationsReadAllRoute: typeof ApiNotificationsReadAllRoute
+  ApiNotificationsUnreadCountRoute: typeof ApiNotificationsUnreadCountRoute
+  ApiSpacesFeedRoute: typeof ApiSpacesFeedRoute
+  ApiConversationsIndexRoute: typeof ApiConversationsIndexRoute
+  ApiGhostsIndexRoute: typeof ApiGhostsIndexRoute
+  ApiNotificationsIndexRoute: typeof ApiNotificationsIndexRoute
+  ApiGhostsGhostIdConversationRoute: typeof ApiGhostsGhostIdConversationRoute
+  ApiGhostsConversationsIndexRoute: typeof ApiGhostsConversationsIndexRoute
+  ApiGhostsConversationsConversationIdMessagesRoute: typeof ApiGhostsConversationsConversationIdMessagesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/void': {
+      id: '/void'
+      path: '/void'
+      fullPath: '/void'
+      preLoaderRoute: typeof VoidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/memories': {
       id: '/memories'
       path: '/memories'
@@ -170,6 +411,13 @@ declare module '@tanstack/react-router' {
       path: '/ghost'
       fullPath: '/ghost'
       preLoaderRoute: typeof GhostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conversations': {
+      id: '/conversations'
+      path: '/conversations'
+      fullPath: '/conversations'
+      preLoaderRoute: typeof ConversationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -193,6 +441,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conversations/': {
+      id: '/conversations/'
+      path: '/'
+      fullPath: '/conversations/'
+      preLoaderRoute: typeof ConversationsIndexRouteImport
+      parentRoute: typeof ConversationsRoute
+    }
     '/chat/': {
       id: '/chat/'
       path: '/'
@@ -200,12 +455,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof ChatRoute
     }
+    '/conversations/$conversationId': {
+      id: '/conversations/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/conversations/$conversationId'
+      preLoaderRoute: typeof ConversationsConversationIdRouteImport
+      parentRoute: typeof ConversationsRoute
+    }
     '/chat/$conversationId': {
       id: '/chat/$conversationId'
       path: '/$conversationId'
       fullPath: '/chat/$conversationId'
       preLoaderRoute: typeof ChatConversationIdRouteImport
       parentRoute: typeof ChatRoute
+    }
+    '/api/ws': {
+      id: '/api/ws'
+      path: '/api/ws'
+      fullPath: '/api/ws'
+      preLoaderRoute: typeof ApiWsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications-ws': {
+      id: '/api/notifications-ws'
+      path: '/api/notifications-ws'
+      fullPath: '/api/notifications-ws'
+      preLoaderRoute: typeof ApiNotificationsWsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications/': {
+      id: '/api/notifications/'
+      path: '/api/notifications'
+      fullPath: '/api/notifications/'
+      preLoaderRoute: typeof ApiNotificationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ghosts/': {
+      id: '/api/ghosts/'
+      path: '/api/ghosts'
+      fullPath: '/api/ghosts/'
+      preLoaderRoute: typeof ApiGhostsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/conversations/': {
+      id: '/api/conversations/'
+      path: '/api/conversations'
+      fullPath: '/api/conversations/'
+      preLoaderRoute: typeof ApiConversationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/spaces/feed': {
+      id: '/api/spaces/feed'
+      path: '/api/spaces/feed'
+      fullPath: '/api/spaces/feed'
+      preLoaderRoute: typeof ApiSpacesFeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications/unread-count': {
+      id: '/api/notifications/unread-count'
+      path: '/api/notifications/unread-count'
+      fullPath: '/api/notifications/unread-count'
+      preLoaderRoute: typeof ApiNotificationsUnreadCountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications/read-all': {
+      id: '/api/notifications/read-all'
+      path: '/api/notifications/read-all'
+      fullPath: '/api/notifications/read-all'
+      preLoaderRoute: typeof ApiNotificationsReadAllRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications/$id': {
+      id: '/api/notifications/$id'
+      path: '/api/notifications/$id'
+      fullPath: '/api/notifications/$id'
+      preLoaderRoute: typeof ApiNotificationsIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/auth/session': {
       id: '/api/auth/session'
@@ -228,6 +560,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ghosts/conversations/': {
+      id: '/api/ghosts/conversations/'
+      path: '/api/ghosts/conversations'
+      fullPath: '/api/ghosts/conversations/'
+      preLoaderRoute: typeof ApiGhostsConversationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications/$id/read': {
+      id: '/api/notifications/$id/read'
+      path: '/read'
+      fullPath: '/api/notifications/$id/read'
+      preLoaderRoute: typeof ApiNotificationsIdReadRouteImport
+      parentRoute: typeof ApiNotificationsIdRoute
+    }
+    '/api/ghosts/$ghostId/conversation': {
+      id: '/api/ghosts/$ghostId/conversation'
+      path: '/api/ghosts/$ghostId/conversation'
+      fullPath: '/api/ghosts/$ghostId/conversation'
+      preLoaderRoute: typeof ApiGhostsGhostIdConversationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ghosts/conversations/$conversationId/messages': {
+      id: '/api/ghosts/conversations/$conversationId/messages'
+      path: '/api/ghosts/conversations/$conversationId/messages'
+      fullPath: '/api/ghosts/conversations/$conversationId/messages'
+      preLoaderRoute: typeof ApiGhostsConversationsConversationIdMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -243,15 +603,56 @@ const ChatRouteChildren: ChatRouteChildren = {
 
 const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
 
+interface ConversationsRouteChildren {
+  ConversationsConversationIdRoute: typeof ConversationsConversationIdRoute
+  ConversationsIndexRoute: typeof ConversationsIndexRoute
+}
+
+const ConversationsRouteChildren: ConversationsRouteChildren = {
+  ConversationsConversationIdRoute: ConversationsConversationIdRoute,
+  ConversationsIndexRoute: ConversationsIndexRoute,
+}
+
+const ConversationsRouteWithChildren = ConversationsRoute._addFileChildren(
+  ConversationsRouteChildren,
+)
+
+interface ApiNotificationsIdRouteChildren {
+  ApiNotificationsIdReadRoute: typeof ApiNotificationsIdReadRoute
+}
+
+const ApiNotificationsIdRouteChildren: ApiNotificationsIdRouteChildren = {
+  ApiNotificationsIdReadRoute: ApiNotificationsIdReadRoute,
+}
+
+const ApiNotificationsIdRouteWithChildren =
+  ApiNotificationsIdRoute._addFileChildren(ApiNotificationsIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRouteWithChildren,
+  ConversationsRoute: ConversationsRouteWithChildren,
   GhostRoute: GhostRoute,
   MemoriesRoute: MemoriesRoute,
+  VoidRoute: VoidRoute,
+  ApiNotificationsWsRoute: ApiNotificationsWsRoute,
+  ApiUploadRoute: ApiUploadRoute,
+  ApiWsRoute: ApiWsRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,
+  ApiNotificationsIdRoute: ApiNotificationsIdRouteWithChildren,
+  ApiNotificationsReadAllRoute: ApiNotificationsReadAllRoute,
+  ApiNotificationsUnreadCountRoute: ApiNotificationsUnreadCountRoute,
+  ApiSpacesFeedRoute: ApiSpacesFeedRoute,
+  ApiConversationsIndexRoute: ApiConversationsIndexRoute,
+  ApiGhostsIndexRoute: ApiGhostsIndexRoute,
+  ApiNotificationsIndexRoute: ApiNotificationsIndexRoute,
+  ApiGhostsGhostIdConversationRoute: ApiGhostsGhostIdConversationRoute,
+  ApiGhostsConversationsIndexRoute: ApiGhostsConversationsIndexRoute,
+  ApiGhostsConversationsConversationIdMessagesRoute:
+    ApiGhostsConversationsConversationIdMessagesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

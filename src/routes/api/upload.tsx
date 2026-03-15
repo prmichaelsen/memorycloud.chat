@@ -10,7 +10,7 @@
  * - User authentication via session cookie
  */
 
-import { createAPIFileRoute } from '@tanstack/start/api'
+import { createFileRoute } from '@tanstack/react-router'
 import { getServerSession } from '@/lib/auth/session'
 import {
   ALLOWED_MIME_TYPES,
@@ -18,8 +18,10 @@ import {
   getFileCategory,
 } from '@/services/upload.service'
 
-export const APIRoute = createAPIFileRoute('/api/upload')({
-  POST: async ({ request }) => {
+export const Route = createFileRoute('/api/upload')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
     // ---------- Auth ----------
     const session = getServerSession(request)
     if (!session) {
@@ -100,6 +102,8 @@ export const APIRoute = createAPIFileRoute('/api/upload')({
         headers: { 'Content-Type': 'application/json' },
       }
     )
+      },
+    },
   },
 })
 
