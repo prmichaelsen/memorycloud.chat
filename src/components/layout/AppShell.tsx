@@ -14,8 +14,6 @@ import { NotificationClientService } from '@/services/notification-client.servic
 import { UnifiedHeader, HEADER_HEIGHT_CLASS } from './UnifiedHeader'
 import { Sidebar } from './Sidebar'
 import { MobileBottomNav } from './MobileBottomNav'
-import { PushPermissionPrompt } from '@/components/notifications/PushPermissionPrompt'
-import { initializeFCM } from '@/lib/fcm'
 import type { Notification } from '@/types/notifications'
 
 interface AppShellProps {

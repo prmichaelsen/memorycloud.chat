@@ -86,7 +86,8 @@ export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations 
     if (conv.name) return conv.name
     // For DMs, show the other participant's name
     // In real app, resolve from user profiles
-    return conv.participant_ids.filter((id) => id !== user?.uid).join(', ') || 'Unknown'
+    const ids = conv.participant_ids ?? (conv as any).participant_user_ids ?? []
+    return ids.filter((id: string) => id !== user?.uid).join(', ') || 'Unknown'
   }
 
   function getAvatar(conv: Conversation) {

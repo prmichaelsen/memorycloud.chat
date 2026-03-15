@@ -26,22 +26,31 @@ import { Route as ApiWsRouteImport } from './routes/api/ws'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiNotificationsWsRouteImport } from './routes/api/notifications-ws'
 import { Route as ApiNotificationsIndexRouteImport } from './routes/api/notifications/index'
+import { Route as ApiMemoriesIndexRouteImport } from './routes/api/memories/index'
 import { Route as ApiGhostsIndexRouteImport } from './routes/api/ghosts/index'
 import { Route as ApiConversationsIndexRouteImport } from './routes/api/conversations/index'
+import { Route as ApiUsersSearchRouteImport } from './routes/api/users/search'
 import { Route as ApiSpacesFeedRouteImport } from './routes/api/spaces/feed'
 import { Route as ApiNotificationsUnreadCountRouteImport } from './routes/api/notifications/unread-count'
 import { Route as ApiNotificationsReadAllRouteImport } from './routes/api/notifications/read-all'
 import { Route as ApiNotificationsIdRouteImport } from './routes/api/notifications/$id'
+import { Route as ApiMemoriesSearchRouteImport } from './routes/api/memories/search'
+import { Route as ApiMemoriesFeedRouteImport } from './routes/api/memories/feed'
+import { Route as ApiMemoriesCheckDuplicateRouteImport } from './routes/api/memories/check-duplicate'
+import { Route as ApiMemoriesMemoryIdRouteImport } from './routes/api/memories/$memoryId'
 import { Route as ApiConversationsConversationIdRouteImport } from './routes/api/conversations/$conversationId'
 import { Route as ApiAuthSessionRouteImport } from './routes/api/auth/session'
 import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiGhostsConversationsIndexRouteImport } from './routes/api/ghosts/conversations/index'
 import { Route as ApiNotificationsIdReadRouteImport } from './routes/api/notifications/$id.read'
+import { Route as ApiMemoriesMemoryIdSimilarRouteImport } from './routes/api/memories/$memoryId/similar'
+import { Route as ApiMemoriesMemoryIdRateRouteImport } from './routes/api/memories/$memoryId/rate'
 import { Route as ApiGhostsGhostIdConversationRouteImport } from './routes/api/ghosts/$ghostId.conversation'
 import { Route as ApiConversationsConversationIdParticipantsRouteImport } from './routes/api/conversations/$conversationId.participants'
 import { Route as ApiConversationsConversationIdLastMessageRouteImport } from './routes/api/conversations/$conversationId.last-message'
 import { Route as ApiGhostsConversationsConversationIdMessagesRouteImport } from './routes/api/ghosts/conversations/$conversationId.messages'
+import { Route as ApiGhostsConversationsConversationIdMessagesStreamRouteImport } from './routes/api/ghosts/conversations/$conversationId.messages.stream'
 
 const VoidRoute = VoidRouteImport.update({
   id: '/void',
@@ -129,6 +138,11 @@ const ApiNotificationsIndexRoute = ApiNotificationsIndexRouteImport.update({
   path: '/api/notifications/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMemoriesIndexRoute = ApiMemoriesIndexRouteImport.update({
+  id: '/api/memories/',
+  path: '/api/memories/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGhostsIndexRoute = ApiGhostsIndexRouteImport.update({
   id: '/api/ghosts/',
   path: '/api/ghosts/',
@@ -137,6 +151,11 @@ const ApiGhostsIndexRoute = ApiGhostsIndexRouteImport.update({
 const ApiConversationsIndexRoute = ApiConversationsIndexRouteImport.update({
   id: '/api/conversations/',
   path: '/api/conversations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUsersSearchRoute = ApiUsersSearchRouteImport.update({
+  id: '/api/users/search',
+  path: '/api/users/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSpacesFeedRoute = ApiSpacesFeedRouteImport.update({
@@ -158,6 +177,27 @@ const ApiNotificationsReadAllRoute = ApiNotificationsReadAllRouteImport.update({
 const ApiNotificationsIdRoute = ApiNotificationsIdRouteImport.update({
   id: '/api/notifications/$id',
   path: '/api/notifications/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMemoriesSearchRoute = ApiMemoriesSearchRouteImport.update({
+  id: '/api/memories/search',
+  path: '/api/memories/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMemoriesFeedRoute = ApiMemoriesFeedRouteImport.update({
+  id: '/api/memories/feed',
+  path: '/api/memories/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMemoriesCheckDuplicateRoute =
+  ApiMemoriesCheckDuplicateRouteImport.update({
+    id: '/api/memories/check-duplicate',
+    path: '/api/memories/check-duplicate',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiMemoriesMemoryIdRoute = ApiMemoriesMemoryIdRouteImport.update({
+  id: '/api/memories/$memoryId',
+  path: '/api/memories/$memoryId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiConversationsConversationIdRoute =
@@ -192,6 +232,17 @@ const ApiNotificationsIdReadRoute = ApiNotificationsIdReadRouteImport.update({
   path: '/read',
   getParentRoute: () => ApiNotificationsIdRoute,
 } as any)
+const ApiMemoriesMemoryIdSimilarRoute =
+  ApiMemoriesMemoryIdSimilarRouteImport.update({
+    id: '/similar',
+    path: '/similar',
+    getParentRoute: () => ApiMemoriesMemoryIdRoute,
+  } as any)
+const ApiMemoriesMemoryIdRateRoute = ApiMemoriesMemoryIdRateRouteImport.update({
+  id: '/rate',
+  path: '/rate',
+  getParentRoute: () => ApiMemoriesMemoryIdRoute,
+} as any)
 const ApiGhostsGhostIdConversationRoute =
   ApiGhostsGhostIdConversationRouteImport.update({
     id: '/api/ghosts/$ghostId/conversation',
@@ -216,6 +267,12 @@ const ApiGhostsConversationsConversationIdMessagesRoute =
     path: '/api/ghosts/conversations/$conversationId/messages',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiGhostsConversationsConversationIdMessagesStreamRoute =
+  ApiGhostsConversationsConversationIdMessagesStreamRouteImport.update({
+    id: '/stream',
+    path: '/stream',
+    getParentRoute: () => ApiGhostsConversationsConversationIdMessagesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -238,19 +295,28 @@ export interface FileRoutesByFullPath {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/conversations/$conversationId': typeof ApiConversationsConversationIdRouteWithChildren
+  '/api/memories/$memoryId': typeof ApiMemoriesMemoryIdRouteWithChildren
+  '/api/memories/check-duplicate': typeof ApiMemoriesCheckDuplicateRoute
+  '/api/memories/feed': typeof ApiMemoriesFeedRoute
+  '/api/memories/search': typeof ApiMemoriesSearchRoute
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
   '/api/spaces/feed': typeof ApiSpacesFeedRoute
+  '/api/users/search': typeof ApiUsersSearchRoute
   '/api/conversations/': typeof ApiConversationsIndexRoute
   '/api/ghosts/': typeof ApiGhostsIndexRoute
+  '/api/memories/': typeof ApiMemoriesIndexRoute
   '/api/notifications/': typeof ApiNotificationsIndexRoute
   '/api/conversations/$conversationId/last-message': typeof ApiConversationsConversationIdLastMessageRoute
   '/api/conversations/$conversationId/participants': typeof ApiConversationsConversationIdParticipantsRoute
   '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
+  '/api/memories/$memoryId/rate': typeof ApiMemoriesMemoryIdRateRoute
+  '/api/memories/$memoryId/similar': typeof ApiMemoriesMemoryIdSimilarRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
-  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRoute
+  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRouteWithChildren
+  '/api/ghosts/conversations/$conversationId/messages/stream': typeof ApiGhostsConversationsConversationIdMessagesStreamRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -270,19 +336,28 @@ export interface FileRoutesByTo {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/conversations/$conversationId': typeof ApiConversationsConversationIdRouteWithChildren
+  '/api/memories/$memoryId': typeof ApiMemoriesMemoryIdRouteWithChildren
+  '/api/memories/check-duplicate': typeof ApiMemoriesCheckDuplicateRoute
+  '/api/memories/feed': typeof ApiMemoriesFeedRoute
+  '/api/memories/search': typeof ApiMemoriesSearchRoute
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
   '/api/spaces/feed': typeof ApiSpacesFeedRoute
+  '/api/users/search': typeof ApiUsersSearchRoute
   '/api/conversations': typeof ApiConversationsIndexRoute
   '/api/ghosts': typeof ApiGhostsIndexRoute
+  '/api/memories': typeof ApiMemoriesIndexRoute
   '/api/notifications': typeof ApiNotificationsIndexRoute
   '/api/conversations/$conversationId/last-message': typeof ApiConversationsConversationIdLastMessageRoute
   '/api/conversations/$conversationId/participants': typeof ApiConversationsConversationIdParticipantsRoute
   '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
+  '/api/memories/$memoryId/rate': typeof ApiMemoriesMemoryIdRateRoute
+  '/api/memories/$memoryId/similar': typeof ApiMemoriesMemoryIdSimilarRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations': typeof ApiGhostsConversationsIndexRoute
-  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRoute
+  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRouteWithChildren
+  '/api/ghosts/conversations/$conversationId/messages/stream': typeof ApiGhostsConversationsConversationIdMessagesStreamRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -306,19 +381,28 @@ export interface FileRoutesById {
   '/api/auth/logout': typeof ApiAuthLogoutRoute
   '/api/auth/session': typeof ApiAuthSessionRoute
   '/api/conversations/$conversationId': typeof ApiConversationsConversationIdRouteWithChildren
+  '/api/memories/$memoryId': typeof ApiMemoriesMemoryIdRouteWithChildren
+  '/api/memories/check-duplicate': typeof ApiMemoriesCheckDuplicateRoute
+  '/api/memories/feed': typeof ApiMemoriesFeedRoute
+  '/api/memories/search': typeof ApiMemoriesSearchRoute
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
   '/api/spaces/feed': typeof ApiSpacesFeedRoute
+  '/api/users/search': typeof ApiUsersSearchRoute
   '/api/conversations/': typeof ApiConversationsIndexRoute
   '/api/ghosts/': typeof ApiGhostsIndexRoute
+  '/api/memories/': typeof ApiMemoriesIndexRoute
   '/api/notifications/': typeof ApiNotificationsIndexRoute
   '/api/conversations/$conversationId/last-message': typeof ApiConversationsConversationIdLastMessageRoute
   '/api/conversations/$conversationId/participants': typeof ApiConversationsConversationIdParticipantsRoute
   '/api/ghosts/$ghostId/conversation': typeof ApiGhostsGhostIdConversationRoute
+  '/api/memories/$memoryId/rate': typeof ApiMemoriesMemoryIdRateRoute
+  '/api/memories/$memoryId/similar': typeof ApiMemoriesMemoryIdSimilarRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
-  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRoute
+  '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRouteWithChildren
+  '/api/ghosts/conversations/$conversationId/messages/stream': typeof ApiGhostsConversationsConversationIdMessagesStreamRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -343,19 +427,28 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/auth/session'
     | '/api/conversations/$conversationId'
+    | '/api/memories/$memoryId'
+    | '/api/memories/check-duplicate'
+    | '/api/memories/feed'
+    | '/api/memories/search'
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
     | '/api/spaces/feed'
+    | '/api/users/search'
     | '/api/conversations/'
     | '/api/ghosts/'
+    | '/api/memories/'
     | '/api/notifications/'
     | '/api/conversations/$conversationId/last-message'
     | '/api/conversations/$conversationId/participants'
     | '/api/ghosts/$ghostId/conversation'
+    | '/api/memories/$memoryId/rate'
+    | '/api/memories/$memoryId/similar'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations/'
     | '/api/ghosts/conversations/$conversationId/messages'
+    | '/api/ghosts/conversations/$conversationId/messages/stream'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -375,19 +468,28 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/auth/session'
     | '/api/conversations/$conversationId'
+    | '/api/memories/$memoryId'
+    | '/api/memories/check-duplicate'
+    | '/api/memories/feed'
+    | '/api/memories/search'
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
     | '/api/spaces/feed'
+    | '/api/users/search'
     | '/api/conversations'
     | '/api/ghosts'
+    | '/api/memories'
     | '/api/notifications'
     | '/api/conversations/$conversationId/last-message'
     | '/api/conversations/$conversationId/participants'
     | '/api/ghosts/$ghostId/conversation'
+    | '/api/memories/$memoryId/rate'
+    | '/api/memories/$memoryId/similar'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations'
     | '/api/ghosts/conversations/$conversationId/messages'
+    | '/api/ghosts/conversations/$conversationId/messages/stream'
   id:
     | '__root__'
     | '/'
@@ -410,19 +512,28 @@ export interface FileRouteTypes {
     | '/api/auth/logout'
     | '/api/auth/session'
     | '/api/conversations/$conversationId'
+    | '/api/memories/$memoryId'
+    | '/api/memories/check-duplicate'
+    | '/api/memories/feed'
+    | '/api/memories/search'
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
     | '/api/spaces/feed'
+    | '/api/users/search'
     | '/api/conversations/'
     | '/api/ghosts/'
+    | '/api/memories/'
     | '/api/notifications/'
     | '/api/conversations/$conversationId/last-message'
     | '/api/conversations/$conversationId/participants'
     | '/api/ghosts/$ghostId/conversation'
+    | '/api/memories/$memoryId/rate'
+    | '/api/memories/$memoryId/similar'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations/'
     | '/api/ghosts/conversations/$conversationId/messages'
+    | '/api/ghosts/conversations/$conversationId/messages/stream'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -441,16 +552,22 @@ export interface RootRouteChildren {
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
   ApiConversationsConversationIdRoute: typeof ApiConversationsConversationIdRouteWithChildren
+  ApiMemoriesMemoryIdRoute: typeof ApiMemoriesMemoryIdRouteWithChildren
+  ApiMemoriesCheckDuplicateRoute: typeof ApiMemoriesCheckDuplicateRoute
+  ApiMemoriesFeedRoute: typeof ApiMemoriesFeedRoute
+  ApiMemoriesSearchRoute: typeof ApiMemoriesSearchRoute
   ApiNotificationsIdRoute: typeof ApiNotificationsIdRouteWithChildren
   ApiNotificationsReadAllRoute: typeof ApiNotificationsReadAllRoute
   ApiNotificationsUnreadCountRoute: typeof ApiNotificationsUnreadCountRoute
   ApiSpacesFeedRoute: typeof ApiSpacesFeedRoute
+  ApiUsersSearchRoute: typeof ApiUsersSearchRoute
   ApiConversationsIndexRoute: typeof ApiConversationsIndexRoute
   ApiGhostsIndexRoute: typeof ApiGhostsIndexRoute
+  ApiMemoriesIndexRoute: typeof ApiMemoriesIndexRoute
   ApiNotificationsIndexRoute: typeof ApiNotificationsIndexRoute
   ApiGhostsGhostIdConversationRoute: typeof ApiGhostsGhostIdConversationRoute
   ApiGhostsConversationsIndexRoute: typeof ApiGhostsConversationsIndexRoute
-  ApiGhostsConversationsConversationIdMessagesRoute: typeof ApiGhostsConversationsConversationIdMessagesRoute
+  ApiGhostsConversationsConversationIdMessagesRoute: typeof ApiGhostsConversationsConversationIdMessagesRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -574,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotificationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/memories/': {
+      id: '/api/memories/'
+      path: '/api/memories'
+      fullPath: '/api/memories/'
+      preLoaderRoute: typeof ApiMemoriesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ghosts/': {
       id: '/api/ghosts/'
       path: '/api/ghosts'
@@ -586,6 +710,13 @@ declare module '@tanstack/react-router' {
       path: '/api/conversations'
       fullPath: '/api/conversations/'
       preLoaderRoute: typeof ApiConversationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/users/search': {
+      id: '/api/users/search'
+      path: '/api/users/search'
+      fullPath: '/api/users/search'
+      preLoaderRoute: typeof ApiUsersSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/spaces/feed': {
@@ -614,6 +745,34 @@ declare module '@tanstack/react-router' {
       path: '/api/notifications/$id'
       fullPath: '/api/notifications/$id'
       preLoaderRoute: typeof ApiNotificationsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/memories/search': {
+      id: '/api/memories/search'
+      path: '/api/memories/search'
+      fullPath: '/api/memories/search'
+      preLoaderRoute: typeof ApiMemoriesSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/memories/feed': {
+      id: '/api/memories/feed'
+      path: '/api/memories/feed'
+      fullPath: '/api/memories/feed'
+      preLoaderRoute: typeof ApiMemoriesFeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/memories/check-duplicate': {
+      id: '/api/memories/check-duplicate'
+      path: '/api/memories/check-duplicate'
+      fullPath: '/api/memories/check-duplicate'
+      preLoaderRoute: typeof ApiMemoriesCheckDuplicateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/memories/$memoryId': {
+      id: '/api/memories/$memoryId'
+      path: '/api/memories/$memoryId'
+      fullPath: '/api/memories/$memoryId'
+      preLoaderRoute: typeof ApiMemoriesMemoryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/conversations/$conversationId': {
@@ -658,6 +817,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotificationsIdReadRouteImport
       parentRoute: typeof ApiNotificationsIdRoute
     }
+    '/api/memories/$memoryId/similar': {
+      id: '/api/memories/$memoryId/similar'
+      path: '/similar'
+      fullPath: '/api/memories/$memoryId/similar'
+      preLoaderRoute: typeof ApiMemoriesMemoryIdSimilarRouteImport
+      parentRoute: typeof ApiMemoriesMemoryIdRoute
+    }
+    '/api/memories/$memoryId/rate': {
+      id: '/api/memories/$memoryId/rate'
+      path: '/rate'
+      fullPath: '/api/memories/$memoryId/rate'
+      preLoaderRoute: typeof ApiMemoriesMemoryIdRateRouteImport
+      parentRoute: typeof ApiMemoriesMemoryIdRoute
+    }
     '/api/ghosts/$ghostId/conversation': {
       id: '/api/ghosts/$ghostId/conversation'
       path: '/api/ghosts/$ghostId/conversation'
@@ -685,6 +858,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/ghosts/conversations/$conversationId/messages'
       preLoaderRoute: typeof ApiGhostsConversationsConversationIdMessagesRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/ghosts/conversations/$conversationId/messages/stream': {
+      id: '/api/ghosts/conversations/$conversationId/messages/stream'
+      path: '/stream'
+      fullPath: '/api/ghosts/conversations/$conversationId/messages/stream'
+      preLoaderRoute: typeof ApiGhostsConversationsConversationIdMessagesStreamRouteImport
+      parentRoute: typeof ApiGhostsConversationsConversationIdMessagesRoute
     }
   }
 }
@@ -745,6 +925,19 @@ const ApiConversationsConversationIdRouteWithChildren =
     ApiConversationsConversationIdRouteChildren,
   )
 
+interface ApiMemoriesMemoryIdRouteChildren {
+  ApiMemoriesMemoryIdRateRoute: typeof ApiMemoriesMemoryIdRateRoute
+  ApiMemoriesMemoryIdSimilarRoute: typeof ApiMemoriesMemoryIdSimilarRoute
+}
+
+const ApiMemoriesMemoryIdRouteChildren: ApiMemoriesMemoryIdRouteChildren = {
+  ApiMemoriesMemoryIdRateRoute: ApiMemoriesMemoryIdRateRoute,
+  ApiMemoriesMemoryIdSimilarRoute: ApiMemoriesMemoryIdSimilarRoute,
+}
+
+const ApiMemoriesMemoryIdRouteWithChildren =
+  ApiMemoriesMemoryIdRoute._addFileChildren(ApiMemoriesMemoryIdRouteChildren)
+
 interface ApiNotificationsIdRouteChildren {
   ApiNotificationsIdReadRoute: typeof ApiNotificationsIdReadRoute
 }
@@ -755,6 +948,21 @@ const ApiNotificationsIdRouteChildren: ApiNotificationsIdRouteChildren = {
 
 const ApiNotificationsIdRouteWithChildren =
   ApiNotificationsIdRoute._addFileChildren(ApiNotificationsIdRouteChildren)
+
+interface ApiGhostsConversationsConversationIdMessagesRouteChildren {
+  ApiGhostsConversationsConversationIdMessagesStreamRoute: typeof ApiGhostsConversationsConversationIdMessagesStreamRoute
+}
+
+const ApiGhostsConversationsConversationIdMessagesRouteChildren: ApiGhostsConversationsConversationIdMessagesRouteChildren =
+  {
+    ApiGhostsConversationsConversationIdMessagesStreamRoute:
+      ApiGhostsConversationsConversationIdMessagesStreamRoute,
+  }
+
+const ApiGhostsConversationsConversationIdMessagesRouteWithChildren =
+  ApiGhostsConversationsConversationIdMessagesRoute._addFileChildren(
+    ApiGhostsConversationsConversationIdMessagesRouteChildren,
+  )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -773,17 +981,23 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthSessionRoute: ApiAuthSessionRoute,
   ApiConversationsConversationIdRoute:
     ApiConversationsConversationIdRouteWithChildren,
+  ApiMemoriesMemoryIdRoute: ApiMemoriesMemoryIdRouteWithChildren,
+  ApiMemoriesCheckDuplicateRoute: ApiMemoriesCheckDuplicateRoute,
+  ApiMemoriesFeedRoute: ApiMemoriesFeedRoute,
+  ApiMemoriesSearchRoute: ApiMemoriesSearchRoute,
   ApiNotificationsIdRoute: ApiNotificationsIdRouteWithChildren,
   ApiNotificationsReadAllRoute: ApiNotificationsReadAllRoute,
   ApiNotificationsUnreadCountRoute: ApiNotificationsUnreadCountRoute,
   ApiSpacesFeedRoute: ApiSpacesFeedRoute,
+  ApiUsersSearchRoute: ApiUsersSearchRoute,
   ApiConversationsIndexRoute: ApiConversationsIndexRoute,
   ApiGhostsIndexRoute: ApiGhostsIndexRoute,
+  ApiMemoriesIndexRoute: ApiMemoriesIndexRoute,
   ApiNotificationsIndexRoute: ApiNotificationsIndexRoute,
   ApiGhostsGhostIdConversationRoute: ApiGhostsGhostIdConversationRoute,
   ApiGhostsConversationsIndexRoute: ApiGhostsConversationsIndexRoute,
   ApiGhostsConversationsConversationIdMessagesRoute:
-    ApiGhostsConversationsConversationIdMessagesRoute,
+    ApiGhostsConversationsConversationIdMessagesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

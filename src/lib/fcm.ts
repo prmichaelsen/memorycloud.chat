@@ -25,6 +25,7 @@ let swRegistration: ServiceWorkerRegistration | null = null
 export async function registerFCMServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (typeof window === 'undefined') return null
   if (!('serviceWorker' in navigator)) return null
+  if (!isFCMConfigured()) return null
 
   try {
     swRegistration = await navigator.serviceWorker.register(
@@ -85,6 +86,7 @@ export async function requestPushPermission(): Promise<PushPermissionState> {
 
 export async function getFCMToken(): Promise<string | null> {
   if (typeof window === 'undefined') return null
+  if (!isFCMConfigured()) return null
 
   const permission = getPushPermissionState()
   if (permission !== 'granted') return null
@@ -215,7 +217,15 @@ export function buildDeepLink(data: Record<string, string>): string {
 // Initialize FCM (call once on app startup)
 // ---------------------------------------------------------------------------
 
+export function isFCMConfigured(): boolean {
+  if (typeof window === 'undefined') return false
+  const appId = import.meta.env.VITE_FIREBASE_APP_ID
+  const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID
+  return !!(appId && messagingSenderId)
+}
+
 export async function initializeFCM(): Promise<void> {
+  if (!isFCMConfigured()) return
   const permission = getPushPermissionState()
   if (permission !== 'granted') return
 

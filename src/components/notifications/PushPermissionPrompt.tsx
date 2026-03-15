@@ -13,6 +13,7 @@ import {
   requestPushPermission,
   getFCMToken,
   markPromptResponded,
+  isFCMConfigured,
   type PushPermissionState,
 } from '@/lib/fcm'
 
@@ -30,6 +31,7 @@ export function PushPermissionPrompt({
   const [requesting, setRequesting] = useState(false)
 
   useEffect(() => {
+    if (!isFCMConfigured()) return
     const state = getPushPermissionState()
     setPermissionState(state)
 
