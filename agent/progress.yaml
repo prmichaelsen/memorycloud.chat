@@ -9,9 +9,9 @@ project:
 milestones:
   - id: milestone_1
     name: Project Scaffolding & Infrastructure
-    status: in_progress
+    status: completed
     file: agent/milestones/milestone-1-project-scaffolding.md
-    tasks_total: 5
+    tasks_total: 4
     tasks_completed: 4
     estimated_weeks: 2
 
@@ -41,14 +41,6 @@ milestones:
 
 tasks:
   milestone_1:
-    - id: task-1
-      name: Extract @prmichaelsen/agentbase-core Package
-      status: not_started
-      started: null
-      file: agent/tasks/milestone-1-project-scaffolding/task-1-extract-agentbase-core-package.md
-      estimated_hours: 8-12
-      actual_hours: null
-      completed_date: null
     - id: task-2
       name: TanStack Start + Cloudflare Setup
       status: completed
@@ -192,8 +184,8 @@ documentation:
 
 progress:
   planning: 100
-  implementation: 94
-  overall: 94
+  implementation: 100
+  overall: 100
 
 recent_work:
   - date: 2026-03-15
