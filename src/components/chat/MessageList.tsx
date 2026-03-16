@@ -108,27 +108,6 @@ export function MessageList({
     }
   }, [conversationId, savingIds, withToast])
 
-  function formatMessageDate(iso: string): string {
-    const date = new Date(iso)
-    const today = new Date()
-    const yesterday = new Date(today)
-    yesterday.setDate(yesterday.getDate() - 1)
-
-    if (date.toDateString() === today.toDateString()) return 'Today'
-    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday'
-    return date.toLocaleDateString(undefined, {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
-  function shouldShowDateDivider(arrayIndex: number): boolean {
-    if (arrayIndex === 0) return true
-    const prev = new Date(messages[arrayIndex - 1].timestamp).toDateString()
-    const curr = new Date(messages[arrayIndex].timestamp).toDateString()
-    return prev !== curr
-  }
 
   if (!isMounted) {
     return <div className="flex-1" />
@@ -165,23 +144,10 @@ export function MessageList({
           ),
         }}
         itemContent={(index, message) => {
-          const arrayIndex = index - firstItemIndex
-          const showDate = shouldShowDateDivider(arrayIndex)
           const displayContent = getTextContent(message.content)
 
           return (
             <div>
-              {/* Date divider */}
-              {showDate && (
-                <div className="flex items-center gap-3 py-3 px-4">
-                  <div className={`flex-1 h-px ${t.borderSubtle}`} style={{ borderWidth: 0, height: '1px', background: 'currentColor', opacity: 0.15 }} />
-                  <span className={`text-xs ${t.textMuted}`} style={{ background: 'transparent' }}>
-                    {formatMessageDate(message.timestamp)}
-                  </span>
-                  <div className={`flex-1 h-px ${t.borderSubtle}`} style={{ borderWidth: 0, height: '1px', background: 'currentColor', opacity: 0.15 }} />
-                </div>
-              )}
-
               <div className="relative">
                 <Message
                   message={message}
