@@ -6,7 +6,7 @@
  */
 
 import { Link } from '@tanstack/react-router'
-import { Menu, X, LogOut, User, Settings, ArrowLeft, EllipsisVertical } from 'lucide-react'
+import { Menu, X, LogOut, User, Settings, EllipsisVertical } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useTheme, type ThemeName } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
@@ -90,39 +90,22 @@ export function UnifiedHeader({
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="h-14 flex items-center justify-between px-4">
-        {/* Left: back + title OR hamburger + branding */}
+        {/* Left: hamburger (mobile) + branding */}
         <div className="flex items-center gap-2 min-w-0 shrink">
-          {title ? (
-            <>
-              <button
-                type="button"
-                onClick={() => window.history.back()}
-                className={`p-1.5 rounded-lg ${t.buttonGhost} shrink-0`}
-                aria-label="Go back"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div className={`w-px h-5 ${t.borderSubtle} shrink-0`} />
-              <span className={`${t.textPrimary} font-medium truncate text-sm`}>{title}</span>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={onToggleSidebar}
-                className={`p-1.5 rounded-md ${t.buttonGhost} transition-colors lg:hidden`}
-                aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-              >
-                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-              <Link
-                to="/"
-                className="text-lg font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent"
-              >
-                Memory Cloud
-              </Link>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            className={`p-1.5 rounded-md ${t.buttonGhost} transition-colors lg:hidden`}
+            aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+          >
+            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+          <Link
+            to="/"
+            className="text-lg font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent"
+          >
+            Memory Cloud
+          </Link>
         </div>
 
         {/* Right: Theme toggle + Notification bell + User avatar */}
