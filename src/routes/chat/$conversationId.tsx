@@ -48,9 +48,13 @@ const CONVERSATION_TABS: SubHeaderTab[] = [
   { id: 'ghost', label: 'Ghost', variant: 'ghost', icon: <Ghost className="w-4 h-4" /> },
 ]
 
+function ConversationViewWrapper() {
+  const { conversationId } = Route.useParams()
+  return <ConversationView key={conversationId} />
+}
+
 export const Route = createFileRoute('/chat/$conversationId')({
-  component: ConversationView,
-  remountDeps: (opts) => opts.params.conversationId,
+  component: ConversationViewWrapper,
   validateSearch: (search: Record<string, unknown>): { tab?: string } => ({
     tab: search.tab as string | undefined,
   }),
@@ -205,12 +209,14 @@ function ConversationView() {
 
       case 'chunk': {
         const event = wsMessage as ServerChunkEvent
+        console.log('[Stream] chunk:', event.content?.slice(0, 80))
         setStreamingBlocks((prev) => appendTextChunk(prev, event.content))
         break
       }
 
       case 'tool_call': {
         const event = wsMessage as any
+        console.log('[Stream] tool_call:', event.toolCall?.name)
         if (event.toolCall) {
           setStreamingBlocks((prev) =>
             insertToolUseBlock(prev, event.toolCall.id, event.toolCall.name)
@@ -221,6 +227,7 @@ function ConversationView() {
 
       case 'tool_result': {
         const event = wsMessage as any
+        console.log('[Stream] tool_result:', event.toolResult?.id)
         if (event.toolResult) {
           setStreamingBlocks((prev) =>
             completeToolUseBlock(prev, event.toolResult.id, 'complete', JSON.stringify(event.toolResult.output))
@@ -230,6 +237,7 @@ function ConversationView() {
       }
 
       case 'complete': {
+        console.log('[Stream] complete')
         setStreamingBlocks([])
         streamingMessageIdRef.current = null
         break

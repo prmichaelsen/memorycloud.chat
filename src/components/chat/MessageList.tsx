@@ -2,9 +2,12 @@
  * MessageList — virtualized scrollable list of messages.
  * Auto-scrolls to bottom on new messages. Supports loading older messages on scroll up.
  * Uses the Message component ported from agentbase.me.
+ *
+ * Streaming and typing indicators are synthetic items in the Virtuoso data array
+ * (matching the agentbase.me approach) for proper scroll behavior.
  */
 
-import { useRef, useEffect, useCallback, useState, memo } from 'react'
+import { useRef, useEffect, useCallback, useState, useMemo, forwardRef, useImperativeHandle } from 'react'
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { useTheme } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
@@ -33,11 +36,22 @@ interface MessageListProps {
   onDelete?: (messageId: string) => void
   onTogglePin?: (messageId: string) => void
   onReport?: (messageId: string) => void
+  inputHeight?: number
+}
+
+export interface MessageListRef {
+  scrollToBottom: () => void
+  scrollToMessage: (messageId: string) => void
 }
 
 const START_INDEX = 100_000
 
-export function MessageList({
+type ListItem =
+  | { type: 'message'; message: MessageType }
+  | { type: 'streaming'; blocks: StreamingBlock[] }
+  | { type: 'typing'; typingUsers: Array<{ user_id: string; user_name: string }> }
+
+export const MessageList = forwardRef<MessageListRef, MessageListProps>(function MessageList({
   messages,
   conversationId,
   currentUserId,
@@ -52,48 +66,82 @@ export function MessageList({
   onDelete,
   onTogglePin,
   onReport,
-}: MessageListProps) {
+  inputHeight = 0,
+}, ref) {
   const t = useTheme()
   const { user } = useAuth()
   const virtuosoRef = useRef<VirtuosoHandle>(null)
-  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [atBottom, setAtBottom] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   const [savedMemoryIds, setSavedMemoryIds] = useState<Map<string, string>>(new Map())
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const { withToast } = useActionToast()
-  const prevFirstIdRef = useRef<string | null>(null)
-  const prevConversationIdRef = useRef(conversationId)
+
+  // Build augmented items array with messages + synthetic streaming/typing entries
+  const items = useMemo(() => {
+    const result: ListItem[] = messages.map(m => ({ type: 'message' as const, message: m }))
+    if (streamingBlocks.length > 0) {
+      result.push({ type: 'streaming' as const, blocks: streamingBlocks })
+    }
+    if (typingUsers.length > 0 || loading) {
+      result.push({ type: 'typing' as const, typingUsers })
+    }
+    return result
+  }, [messages, streamingBlocks, typingUsers, loading])
+
+  // Track firstItemIndex for prepend support
+  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX - items.length)
+
+  useEffect(() => {
+    setFirstItemIndex(START_INDEX - items.length)
+  }, [items.length])
 
   // SSR guard — Virtuoso renders nothing server-side
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  // Reset firstItemIndex when conversation changes
+  // Manual scroll-to-bottom when streaming content changes
+  // (followOutput only fires on item count changes, not content updates)
   useEffect(() => {
-    if (prevConversationIdRef.current !== conversationId) {
-      prevConversationIdRef.current = conversationId
-      setFirstItemIndex(START_INDEX)
-      prevFirstIdRef.current = null
+    if (atBottom && streamingBlocks.length > 0) {
+      virtuosoRef.current?.scrollToIndex({
+        index: items.length - 1,
+        align: 'end',
+        behavior: 'auto',
+      })
     }
-  }, [conversationId])
+  }, [streamingBlocks, atBottom, items.length])
 
-  // Detect prepended messages and adjust firstItemIndex
-  useEffect(() => {
-    if (messages.length === 0) {
-      prevFirstIdRef.current = null
-      return
-    }
-    const currentFirstId = messages[0].id
-    if (prevFirstIdRef.current !== null && prevFirstIdRef.current !== currentFirstId) {
-      const oldIndex = messages.findIndex((m) => m.id === prevFirstIdRef.current)
-      if (oldIndex > 0) {
-        setFirstItemIndex((prev) => prev - oldIndex)
+  // Expose scrollToBottom and scrollToMessage methods to parent
+  useImperativeHandle(ref, () => ({
+    scrollToBottom: () => {
+      if (items.length > 0) {
+        virtuosoRef.current?.scrollToIndex({
+          index: items.length - 1,
+          align: 'end',
+          behavior: 'auto',
+        })
       }
-    }
-    prevFirstIdRef.current = currentFirstId
-  }, [messages])
+    },
+    scrollToMessage: (messageId: string) => {
+      const index = messages.findIndex(m => m.id === messageId)
+      if (index === -1) return
+      virtuosoRef.current?.scrollToIndex({
+        index,
+        align: 'center',
+        behavior: 'auto',
+      })
+      setTimeout(() => {
+        const el = document.querySelector(`[data-message-id="${messageId}"]`)
+        if (el) {
+          el.classList.add('message-highlight')
+          setTimeout(() => el.classList.remove('message-highlight'), 2000)
+        }
+      }, 100)
+    },
+  }), [items, messages])
 
   const handleSaveMemory = useCallback(async (message: MessageType) => {
     if (savingIds.has(message.id)) return
@@ -122,7 +170,6 @@ export function MessageList({
     }
   }, [conversationId, savingIds, withToast])
 
-
   if (!isMounted) {
     return <div className="flex-1" />
   }
@@ -132,36 +179,66 @@ export function MessageList({
       <Virtuoso
         ref={virtuosoRef}
         className="flex-grow h-0"
-        data={messages}
+        data={items}
         firstItemIndex={firstItemIndex}
-        initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}
+        initialTopMostItemIndex={items.length > 0 ? items.length - 1 : 0}
         startReached={() => {
-          if (hasMore && !loading && onLoadMore) onLoadMore()
+          if (!isLoadingMore && hasMore && onLoadMore) {
+            setIsLoadingMore(true)
+            onLoadMore()
+            setTimeout(() => setIsLoadingMore(false), 1000)
+          }
         }}
         atBottomStateChange={setAtBottom}
-        followOutput={(isAtBottom) => isAtBottom ? 'smooth' : false}
-        computeItemKey={(_index, msg) => msg.id}
+        followOutput={(isAtBottom) => isAtBottom ? 'auto' : false}
+        totalListHeightChanged={() => {
+          if (atBottom) {
+            virtuosoRef.current?.scrollToIndex({
+              index: items.length - 1,
+              align: 'end',
+              behavior: 'auto',
+            })
+          }
+        }}
+        computeItemKey={(_index, item) => {
+          if (item.type === 'message') return item.message.id
+          if (item.type === 'streaming') return '__streaming__'
+          return '__typing__'
+        }}
         components={{
           Header: () =>
-            loading ? (
+            isLoadingMore ? (
               <div className="flex justify-center py-4">
-                <div className={`text-sm ${t.textMuted}`}>Loading messages...</div>
+                <div className={`text-sm ${t.textMuted}`}>Loading older messages...</div>
               </div>
             ) : null,
           Footer: () => (
-            <div className="px-4">
-              {streamingBlocks.length > 0 && (
-                <StreamingBlocks blocks={streamingBlocks} />
-              )}
-              <TypingIndicator typingUsers={typingUsers} />
-            </div>
+            <div style={{ paddingBottom: inputHeight > 0 ? `${inputHeight + 16}px` : '0' }} />
           ),
         }}
-        itemContent={(index, message) => {
+        itemContent={(_index, item) => {
+          if (item.type === 'typing') {
+            return (
+              <div className="px-4">
+                <TypingIndicator typingUsers={item.typingUsers} />
+              </div>
+            )
+          }
+
+          if (item.type === 'streaming') {
+            return (
+              <div className="px-4">
+                <StreamingBlocks blocks={item.blocks} />
+              </div>
+            )
+          }
+
+          // item.type === 'message'
+          const message = item.message
           const displayContent = getTextContent(message.content)
 
           return (
-            <div>
+            <div data-message-id={message.id}>
               <div className="relative">
                 <Message
                   message={message}
@@ -193,4 +270,4 @@ export function MessageList({
       />
     </div>
   )
-}
+})

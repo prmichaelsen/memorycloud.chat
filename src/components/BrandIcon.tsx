@@ -22,7 +22,7 @@ export function BrandIcon({ className, size }: BrandIconProps) {
 
   return (
     <div style={{transform: 'scale(1.5)'}}>
-      <div className={`inline-block shrink-0 ${bgClass} ${sizeClass} ${className ?? ''}`} style={maskStyle} />
+      <div className={`shrink-0 ${bgClass} ${sizeClass} ${className ?? ''}`} style={maskStyle} />
     </div>
   )
 }
