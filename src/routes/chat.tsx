@@ -13,19 +13,21 @@ import { createConversation } from '@/services/conversation.service'
 import { Modal } from '@/components/ui/Modal'
 import { Search, MessageSquare } from 'lucide-react'
 import { getAuthSession } from '@/lib/auth/server-fn'
-import { ConversationDatabaseService } from '@/services/conversation-database.service'
+import { ConversationDatabaseService, resolveParticipantProfiles } from '@/services/conversation-database.service'
 
 export const Route = createFileRoute('/chat')({
   component: ChatLayout,
   beforeLoad: async () => {
-    if (typeof window !== 'undefined') return { initialConversations: [] }
+    if (typeof window !== 'undefined') return { initialConversations: [], initialProfiles: {} }
     try {
       const user = await getAuthSession()
-      if (!user) return { initialConversations: [] }
+      if (!user) return { initialConversations: [], initialProfiles: {} }
       const result = await ConversationDatabaseService.listConversations({ user_id: user.uid })
-      return { initialConversations: result.conversations }
+      const allIds = [...new Set(result.conversations.flatMap((c) => c.participant_ids))]
+      const profiles = await resolveParticipantProfiles(allIds)
+      return { initialConversations: result.conversations, initialProfiles: profiles }
     } catch {
-      return { initialConversations: [] }
+      return { initialConversations: [], initialProfiles: {} }
     }
   },
 })
@@ -34,7 +36,7 @@ function ChatLayout() {
   const t = useTheme()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { initialConversations } = Route.useRouteContext()
+  const { initialConversations, initialProfiles } = Route.useRouteContext()
 
   const [showNewDm, setShowNewDm] = useState(false)
   const [showNewGroup, setShowNewGroup] = useState(false)
@@ -100,12 +102,13 @@ function ChatLayout() {
   }
 
   return (
-    <div className={`flex h-screen overflow-hidden ${t.page}`}>
+    <div className={`flex h-[calc(100vh-3.5rem)] overflow-hidden ${t.page}`}>
       {/* Conversation sidebar */}
       <ConversationSidebar
         onNewDm={() => setShowNewDm(true)}
         onNewGroup={() => setShowNewGroup(true)}
         initialConversations={initialConversations}
+        initialProfiles={initialProfiles}
       />
 
       {/* Main conversation area */}
