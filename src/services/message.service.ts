@@ -64,60 +64,6 @@ export async function listMessages(
 }
 
 /**
- * Get a single message by ID.
- */
-export async function getMessage(
-  conversationId: string,
-  messageId: string,
-): Promise<Message | null> {
-  const res = await fetch(
-    `/api/conversations/${conversationId}/messages/${messageId}`,
-  )
-  if (!res.ok) {
-    if (res.status === 404) return null
-    throw new Error(`Failed to fetch message (${res.status})`)
-  }
-  return res.json()
-}
-
-/**
- * Update a message's content (for edits).
- */
-export async function updateMessage(
-  conversationId: string,
-  messageId: string,
-  content: string,
-): Promise<void> {
-  const res = await fetch(
-    `/api/conversations/${conversationId}/messages/${messageId}`,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content }),
-    },
-  )
-  if (!res.ok) {
-    throw new Error(`Failed to update message (${res.status})`)
-  }
-}
-
-/**
- * Delete a message.
- */
-export async function deleteMessage(
-  conversationId: string,
-  messageId: string,
-): Promise<void> {
-  const res = await fetch(
-    `/api/conversations/${conversationId}/messages/${messageId}`,
-    { method: 'DELETE' },
-  )
-  if (!res.ok) {
-    throw new Error(`Failed to delete message (${res.status})`)
-  }
-}
-
-/**
  * Mark all messages in a conversation as read for the current user.
  */
 export async function markConversationRead(

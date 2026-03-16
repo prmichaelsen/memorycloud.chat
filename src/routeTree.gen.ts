@@ -64,15 +64,15 @@ import { Route as ApiGroupLinksCodeRedeemRouteImport } from './routes/api/group-
 import { Route as ApiGhostsGhostIdConversationRouteImport } from './routes/api/ghosts/$ghostId.conversation'
 import { Route as ApiFriendLinksCodeRedeemRouteImport } from './routes/api/friend-links/$code.redeem'
 import { Route as ApiDmLinksCodeRedeemRouteImport } from './routes/api/dm-links/$code.redeem'
-import { Route as ApiConversationsConversationIdReadRouteImport } from './routes/api/conversations/$conversationId.read'
+import { Route as ApiConversationsConversationIdReadRouteImport } from './routes/api/conversations/$conversationId/read'
 import { Route as ApiConversationsConversationIdParticipantsRouteImport } from './routes/api/conversations/$conversationId.participants'
 import { Route as ApiConversationsConversationIdMessagesRouteImport } from './routes/api/conversations/$conversationId.messages'
 import { Route as ApiConversationsConversationIdLastMessageRouteImport } from './routes/api/conversations/$conversationId.last-message'
+import { Route as ApiConversationsConversationIdMessagesIndexRouteImport } from './routes/api/conversations/$conversationId/messages/index'
 import { Route as ApiMcpToolsToolNameSchemaRouteImport } from './routes/api/mcp/tools.$toolName.schema'
 import { Route as ApiMcpToolsToolNameInvokeRouteImport } from './routes/api/mcp/tools.$toolName.invoke'
 import { Route as ApiGroupsGroupIdMembersUserIdRouteImport } from './routes/api/groups/$groupId.members.$userId'
 import { Route as ApiGhostsConversationsConversationIdMessagesRouteImport } from './routes/api/ghosts/conversations/$conversationId.messages'
-import { Route as ApiConversationsConversationIdMessagesMessageIdRouteImport } from './routes/api/conversations/$conversationId.messages.$messageId'
 import { Route as ApiGhostsConversationsConversationIdMessagesStreamRouteImport } from './routes/api/ghosts/conversations/$conversationId.messages.stream'
 
 const VoidRoute = VoidRouteImport.update({
@@ -384,6 +384,12 @@ const ApiConversationsConversationIdLastMessageRoute =
     path: '/last-message',
     getParentRoute: () => ApiConversationsConversationIdRoute,
   } as any)
+const ApiConversationsConversationIdMessagesIndexRoute =
+  ApiConversationsConversationIdMessagesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ApiConversationsConversationIdMessagesRoute,
+  } as any)
 const ApiMcpToolsToolNameSchemaRoute =
   ApiMcpToolsToolNameSchemaRouteImport.update({
     id: '/$toolName/schema',
@@ -407,12 +413,6 @@ const ApiGhostsConversationsConversationIdMessagesRoute =
     id: '/api/ghosts/conversations/$conversationId/messages',
     path: '/api/ghosts/conversations/$conversationId/messages',
     getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiConversationsConversationIdMessagesMessageIdRoute =
-  ApiConversationsConversationIdMessagesMessageIdRouteImport.update({
-    id: '/$messageId',
-    path: '/$messageId',
-    getParentRoute: () => ApiConversationsConversationIdMessagesRoute,
   } as any)
 const ApiGhostsConversationsConversationIdMessagesStreamRoute =
   ApiGhostsConversationsConversationIdMessagesStreamRouteImport.update({
@@ -481,11 +481,11 @@ export interface FileRoutesByFullPath {
   '/api/memories/$memoryId/similar': typeof ApiMemoriesMemoryIdSimilarRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
-  '/api/conversations/$conversationId/messages/$messageId': typeof ApiConversationsConversationIdMessagesMessageIdRoute
   '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRouteWithChildren
   '/api/groups/$groupId/members/$userId': typeof ApiGroupsGroupIdMembersUserIdRoute
   '/api/mcp/tools/$toolName/invoke': typeof ApiMcpToolsToolNameInvokeRoute
   '/api/mcp/tools/$toolName/schema': typeof ApiMcpToolsToolNameSchemaRoute
+  '/api/conversations/$conversationId/messages/': typeof ApiConversationsConversationIdMessagesIndexRoute
   '/api/ghosts/conversations/$conversationId/messages/stream': typeof ApiGhostsConversationsConversationIdMessagesStreamRoute
 }
 export interface FileRoutesByTo {
@@ -531,7 +531,6 @@ export interface FileRoutesByTo {
   '/api/notifications': typeof ApiNotificationsIndexRoute
   '/api/relationships': typeof ApiRelationshipsIndexRoute
   '/api/conversations/$conversationId/last-message': typeof ApiConversationsConversationIdLastMessageRoute
-  '/api/conversations/$conversationId/messages': typeof ApiConversationsConversationIdMessagesRouteWithChildren
   '/api/conversations/$conversationId/participants': typeof ApiConversationsConversationIdParticipantsRoute
   '/api/conversations/$conversationId/read': typeof ApiConversationsConversationIdReadRoute
   '/api/dm-links/$code/redeem': typeof ApiDmLinksCodeRedeemRoute
@@ -545,11 +544,11 @@ export interface FileRoutesByTo {
   '/api/memories/$memoryId/similar': typeof ApiMemoriesMemoryIdSimilarRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations': typeof ApiGhostsConversationsIndexRoute
-  '/api/conversations/$conversationId/messages/$messageId': typeof ApiConversationsConversationIdMessagesMessageIdRoute
   '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRouteWithChildren
   '/api/groups/$groupId/members/$userId': typeof ApiGroupsGroupIdMembersUserIdRoute
   '/api/mcp/tools/$toolName/invoke': typeof ApiMcpToolsToolNameInvokeRoute
   '/api/mcp/tools/$toolName/schema': typeof ApiMcpToolsToolNameSchemaRoute
+  '/api/conversations/$conversationId/messages': typeof ApiConversationsConversationIdMessagesIndexRoute
   '/api/ghosts/conversations/$conversationId/messages/stream': typeof ApiGhostsConversationsConversationIdMessagesStreamRoute
 }
 export interface FileRoutesById {
@@ -613,11 +612,11 @@ export interface FileRoutesById {
   '/api/memories/$memoryId/similar': typeof ApiMemoriesMemoryIdSimilarRoute
   '/api/notifications/$id/read': typeof ApiNotificationsIdReadRoute
   '/api/ghosts/conversations/': typeof ApiGhostsConversationsIndexRoute
-  '/api/conversations/$conversationId/messages/$messageId': typeof ApiConversationsConversationIdMessagesMessageIdRoute
   '/api/ghosts/conversations/$conversationId/messages': typeof ApiGhostsConversationsConversationIdMessagesRouteWithChildren
   '/api/groups/$groupId/members/$userId': typeof ApiGroupsGroupIdMembersUserIdRoute
   '/api/mcp/tools/$toolName/invoke': typeof ApiMcpToolsToolNameInvokeRoute
   '/api/mcp/tools/$toolName/schema': typeof ApiMcpToolsToolNameSchemaRoute
+  '/api/conversations/$conversationId/messages/': typeof ApiConversationsConversationIdMessagesIndexRoute
   '/api/ghosts/conversations/$conversationId/messages/stream': typeof ApiGhostsConversationsConversationIdMessagesStreamRoute
 }
 export interface FileRouteTypes {
@@ -682,11 +681,11 @@ export interface FileRouteTypes {
     | '/api/memories/$memoryId/similar'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations/'
-    | '/api/conversations/$conversationId/messages/$messageId'
     | '/api/ghosts/conversations/$conversationId/messages'
     | '/api/groups/$groupId/members/$userId'
     | '/api/mcp/tools/$toolName/invoke'
     | '/api/mcp/tools/$toolName/schema'
+    | '/api/conversations/$conversationId/messages/'
     | '/api/ghosts/conversations/$conversationId/messages/stream'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -732,7 +731,6 @@ export interface FileRouteTypes {
     | '/api/notifications'
     | '/api/relationships'
     | '/api/conversations/$conversationId/last-message'
-    | '/api/conversations/$conversationId/messages'
     | '/api/conversations/$conversationId/participants'
     | '/api/conversations/$conversationId/read'
     | '/api/dm-links/$code/redeem'
@@ -746,11 +744,11 @@ export interface FileRouteTypes {
     | '/api/memories/$memoryId/similar'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations'
-    | '/api/conversations/$conversationId/messages/$messageId'
     | '/api/ghosts/conversations/$conversationId/messages'
     | '/api/groups/$groupId/members/$userId'
     | '/api/mcp/tools/$toolName/invoke'
     | '/api/mcp/tools/$toolName/schema'
+    | '/api/conversations/$conversationId/messages'
     | '/api/ghosts/conversations/$conversationId/messages/stream'
   id:
     | '__root__'
@@ -813,11 +811,11 @@ export interface FileRouteTypes {
     | '/api/memories/$memoryId/similar'
     | '/api/notifications/$id/read'
     | '/api/ghosts/conversations/'
-    | '/api/conversations/$conversationId/messages/$messageId'
     | '/api/ghosts/conversations/$conversationId/messages'
     | '/api/groups/$groupId/members/$userId'
     | '/api/mcp/tools/$toolName/invoke'
     | '/api/mcp/tools/$toolName/schema'
+    | '/api/conversations/$conversationId/messages/'
     | '/api/ghosts/conversations/$conversationId/messages/stream'
   fileRoutesById: FileRoutesById
 }
@@ -1284,6 +1282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiConversationsConversationIdLastMessageRouteImport
       parentRoute: typeof ApiConversationsConversationIdRoute
     }
+    '/api/conversations/$conversationId/messages/': {
+      id: '/api/conversations/$conversationId/messages/'
+      path: '/'
+      fullPath: '/api/conversations/$conversationId/messages/'
+      preLoaderRoute: typeof ApiConversationsConversationIdMessagesIndexRouteImport
+      parentRoute: typeof ApiConversationsConversationIdMessagesRoute
+    }
     '/api/mcp/tools/$toolName/schema': {
       id: '/api/mcp/tools/$toolName/schema'
       path: '/$toolName/schema'
@@ -1311,13 +1316,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/ghosts/conversations/$conversationId/messages'
       preLoaderRoute: typeof ApiGhostsConversationsConversationIdMessagesRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/api/conversations/$conversationId/messages/$messageId': {
-      id: '/api/conversations/$conversationId/messages/$messageId'
-      path: '/$messageId'
-      fullPath: '/api/conversations/$conversationId/messages/$messageId'
-      preLoaderRoute: typeof ApiConversationsConversationIdMessagesMessageIdRouteImport
-      parentRoute: typeof ApiConversationsConversationIdMessagesRoute
     }
     '/api/ghosts/conversations/$conversationId/messages/stream': {
       id: '/api/ghosts/conversations/$conversationId/messages/stream'
@@ -1368,13 +1366,13 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
 )
 
 interface ApiConversationsConversationIdMessagesRouteChildren {
-  ApiConversationsConversationIdMessagesMessageIdRoute: typeof ApiConversationsConversationIdMessagesMessageIdRoute
+  ApiConversationsConversationIdMessagesIndexRoute: typeof ApiConversationsConversationIdMessagesIndexRoute
 }
 
 const ApiConversationsConversationIdMessagesRouteChildren: ApiConversationsConversationIdMessagesRouteChildren =
   {
-    ApiConversationsConversationIdMessagesMessageIdRoute:
-      ApiConversationsConversationIdMessagesMessageIdRoute,
+    ApiConversationsConversationIdMessagesIndexRoute:
+      ApiConversationsConversationIdMessagesIndexRoute,
   }
 
 const ApiConversationsConversationIdMessagesRouteWithChildren =
