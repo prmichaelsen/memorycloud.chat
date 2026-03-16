@@ -26,16 +26,11 @@ export const Route = createFileRoute('/api/notifications-ws')({
       const id = notificationHubBinding.idFromName(userId)
       const stub = notificationHubBinding.get(id)
 
-      // Forward the upgrade request, passing userId as a query param
-      const doUrl = new URL(request.url)
-      doUrl.pathname = '/websocket'
-      doUrl.searchParams.set('userId', userId)
+      // Pass user info via headers, forward original request to preserve WS upgrade
+      const doHeaders = new Headers(request.headers)
+      doHeaders.set('X-User-Id', userId)
 
-      return stub.fetch(
-        new Request(doUrl.toString(), {
-          headers: request.headers,
-        }),
-      )
+      return stub.fetch(new Request(request.url, { headers: doHeaders }))
     } catch {
       return new Response('Internal Server Error', { status: 500 })
     }

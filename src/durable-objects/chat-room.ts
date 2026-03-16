@@ -37,13 +37,9 @@ export class ChatRoom extends DurableObject {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url)
 
-    if (url.pathname === '/websocket') {
-      if (request.headers.get('Upgrade') !== 'websocket') {
-        return new Response('Expected WebSocket', { status: 426 })
-      }
-
-      const userId = url.searchParams.get('userId')
-      const userName = url.searchParams.get('userName')
+    if (request.headers.get('Upgrade') === 'websocket') {
+      const userId = request.headers.get('X-User-Id')
+      const userName = request.headers.get('X-User-Name')
 
       if (!userId) {
         return new Response('Missing userId parameter', { status: 400 })

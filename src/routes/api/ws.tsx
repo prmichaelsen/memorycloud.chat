@@ -42,18 +42,12 @@ export const Route = createFileRoute('/api/ws')({
       const id = chatRoomBinding.idFromName(conversationId)
       const stub = chatRoomBinding.get(id)
 
-      // Forward the WebSocket upgrade to the Durable Object
-      // Pass user info as query params so the DO can attach metadata
-      const doUrl = new URL(request.url)
-      doUrl.pathname = '/websocket'
-      doUrl.searchParams.set('userId', userId)
-      doUrl.searchParams.set('userName', userName)
+      // Pass user info via headers, forward original request to preserve WS upgrade
+      const doHeaders = new Headers(request.headers)
+      doHeaders.set('X-User-Id', userId)
+      doHeaders.set('X-User-Name', userName)
 
-      return stub.fetch(
-        new Request(doUrl.toString(), {
-          headers: request.headers,
-        }),
-      )
+      return stub.fetch(new Request(request.url, { headers: doHeaders }))
     } catch {
       return new Response('Internal Server Error', { status: 500 })
     }
