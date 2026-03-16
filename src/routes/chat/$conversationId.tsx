@@ -3,7 +3,7 @@
  * compose input, real-time updates via WebSocket, and group member panel.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useTheme } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
@@ -40,6 +40,7 @@ import { ConversationDatabaseService } from '@/services/conversation-database.se
 import { buildProfileMap } from '@/lib/profile-map'
 import { MessageDatabaseService } from '@/services/message-database.service'
 import { getTextContent } from '@/lib/message-content'
+import { useHeader } from '@/contexts/HeaderContext'
 
 const CONVERSATION_TABS: SubHeaderTab[] = [
   { id: 'chat', label: 'Chat' },
@@ -109,6 +110,7 @@ function ConversationView() {
   // Streaming blocks state for real-time agent generation
   const [streamingBlocks, setStreamingBlocks] = useState<StreamingBlock[]>([])
   const streamingMessageIdRef = useRef<string | null>(null)
+  const wsInitSentRef = useRef<string | null>(null)
 
   // WebSocket for real-time
   const { status: wsStatus, lastMessage: wsMessage, send: wsSend } = useWebSocket(conversationId)
@@ -185,7 +187,9 @@ function ConversationView() {
 
   // Send init message when WebSocket connects to load messages via ChatRoom DO
   useEffect(() => {
-    if (wsStatus === 'connected' && user) {
+    const key = `${conversationId}:${wsStatus}`
+    if (wsStatus === 'connected' && user && wsInitSentRef.current !== key) {
+      wsInitSentRef.current = key
       wsSend({
         type: 'init',
         userId: user.uid,
@@ -441,31 +445,30 @@ function ConversationView() {
 
   const isGroup = conversation.type === 'group'
 
+  // Set the UnifiedHeader title for mobile
+  const { setTitle, setHeaderActions } = useHeader()
+  useEffect(() => {
+    setTitle(conversationName)
+    return () => setTitle(undefined)
+  }, [conversationName, setTitle])
+  useEffect(() => {
+    return () => setHeaderActions(undefined)
+  }, [setHeaderActions])
+
   return (
     <div className="flex flex-1 h-full min-h-0">
       {/* Main conversation panel */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
-        {/* Header */}
+        {/* Desktop-only toolbar (mobile uses UnifiedHeader) */}
         <div
-          className={`flex items-center gap-3 px-4 py-3 shrink-0 ${t.border} border-t-0 border-l-0 border-r-0`}
+          className={`hidden lg:flex items-center gap-3 px-4 py-2 shrink-0 ${t.border} border-t-0 border-l-0 border-r-0`}
         >
-          {/* Back button (mobile) */}
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className={`p-1.5 rounded-lg lg:hidden ${t.buttonGhost}`}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          {/* Conversation info */}
           <div className="flex-1 min-w-0">
             <h1 className={`text-sm font-semibold truncate ${t.textPrimary}`}>
               {conversationName}
             </h1>
           </div>
 
-          {/* Connection status */}
           <div className="flex items-center gap-2">
             {wsStatus === 'connected' ? (
               <Wifi className={`w-4 h-4 ${t.statusOnline}`} style={{ color: 'currentColor' }} />
@@ -473,7 +476,6 @@ function ConversationView() {
               <WifiOff className={`w-4 h-4 ${t.textMuted}`} />
             )}
 
-            {/* Group members toggle */}
             {isGroup && (
               <button
                 type="button"
@@ -484,7 +486,6 @@ function ConversationView() {
               </button>
             )}
 
-            {/* Group header menu */}
             <ConversationHeaderMenu
               conversationId={conversationId}
               isGroup={isGroup}
@@ -493,15 +494,15 @@ function ConversationView() {
               onManageMembers={() => setShowMembers(true)}
               onShareLink={() => setShowAddParticipant(true)}
             />
+
+            {/* Tab switcher (inline on desktop) */}
+            <SubHeaderTabs
+              tabs={CONVERSATION_TABS}
+              activeId={activeTab}
+              onSelect={handleTabChange}
+            />
           </div>
         </div>
-
-        {/* Sub-header tabs */}
-        <SubHeaderTabs
-          tabs={CONVERSATION_TABS}
-          activeId={activeTab}
-          onSelect={handleTabChange}
-        />
 
         {activeTab === 'ghost' ? (
           /* Ghost chat view */
