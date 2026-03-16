@@ -8,7 +8,7 @@ import { useMessageActionBarItems } from '@/hooks/action-bar/useMessageActionBar
 import { useMessageOverflowItems } from '@/hooks/action-bar/useMessageOverflowItems'
 import { useReactActionBarItem } from '@/hooks/action-bar/useReactActionBarItem'
 import { getTextContent } from '@/lib/message-content'
-import type { Message as MessageType, MessageContent, ContentBlock } from '@/types/conversations'
+import type { Message as MessageType, MessageContent, ContentBlock, ConversationType } from '@/types/conversations'
 import type { ProfileSummary } from '@/lib/profile-map'
 
 interface MessageProps {
@@ -23,6 +23,7 @@ interface MessageProps {
   onDelete?: (messageId: string) => void
   onTogglePin?: (messageId: string) => void
   onReport?: (messageId: string) => void
+  conversationType?: ConversationType
 }
 
 export const Message = memo(function Message({
@@ -37,6 +38,7 @@ export const Message = memo(function Message({
   onDelete,
   onTogglePin,
   onReport,
+  conversationType,
 }: MessageProps) {
   const isUser = message.sender_user_id ? message.sender_user_id === currentUserId : message.role === 'user'
   const isAssistant = message.role === 'assistant' && !message.sender_user_id
@@ -133,6 +135,15 @@ export const Message = memo(function Message({
           <span className={`text-sm font-medium ${isGhostMessage ? 'text-purple-300' : 'text-gray-200'}`}>
             {isGhostMessage ? 'Ghost' : displayName}
           </span>
+          {conversationType && (
+            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+              conversationType === 'dm' ? 'bg-brand-primary/20 text-brand-primary'
+              : conversationType === 'group' ? 'bg-brand-secondary/20 text-brand-secondary'
+              : 'bg-brand-accent/20 text-brand-accent'
+            }`}>
+              {conversationType === 'dm' ? 'dm' : conversationType === 'group' ? 'group' : 'agent'}
+            </span>
+          )}
           <span className="text-xs text-gray-400">
             {new Date(message.timestamp).toLocaleTimeString('en-US', {
               hour: 'numeric',

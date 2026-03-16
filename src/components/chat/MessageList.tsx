@@ -11,7 +11,7 @@ import { useRef, useEffect, useCallback, useState, useMemo, forwardRef, useImper
 import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso'
 import { useTheme } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
-import type { Message as MessageType } from '@/types/conversations'
+import type { Message as MessageType, ConversationType } from '@/types/conversations'
 import type { StreamingBlock } from '@/types/streaming'
 import { Message } from '@/components/chat/Message'
 import { MarkdownContent } from '@/components/chat/MarkdownContent'
@@ -37,6 +37,7 @@ interface MessageListProps {
   onDelete?: (messageId: string) => void
   onTogglePin?: (messageId: string) => void
   onReport?: (messageId: string) => void
+  conversationType?: ConversationType
   inputHeight?: number
 }
 
@@ -67,6 +68,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
   onDelete,
   onTogglePin,
   onReport,
+  conversationType,
   inputHeight = 0,
 }, ref) {
   const t = useTheme()
@@ -283,6 +285,7 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
                   onDelete={onDelete}
                   onTogglePin={onTogglePin}
                   onReport={onReport}
+                  conversationType={conversationType}
                 />
 
                 {/* Save as memory button */}

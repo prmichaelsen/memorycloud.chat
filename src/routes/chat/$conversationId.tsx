@@ -486,6 +486,7 @@ function ConversationView() {
             onDelete={handleDelete}
             onTogglePin={handleTogglePin}
             onReport={handleReport}
+            conversationType={conversation?.type}
           />
         </ErrorBoundary>
 
