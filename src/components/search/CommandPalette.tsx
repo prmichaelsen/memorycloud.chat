@@ -1,63 +1,51 @@
 /**
- * CommandPalette — Cmd+K global search across memories, people, and conversations.
- * Rendered via createPortal to document.body.
+ * CommandPalette — Cmd+K global search across DM partners, groups, and messages.
+ * Powered by Algolia via GET /api/search. Rendered via createPortal to document.body.
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from '@tanstack/react-router'
-import { Brain, User, MessageSquare, Search, Loader2 } from 'lucide-react'
-import Fuse from 'fuse.js'
+import { User, Users, MessageSquare, Search, Loader2 } from 'lucide-react'
 import { useTheme } from '@/lib/theming'
-import { useAuth } from '@/components/auth/AuthContext'
-import { listConversations } from '@/services/conversation.service'
-import type { MemoryItem } from '@/types/memories'
-import type { Conversation } from '@/types/conversations'
 
 interface CommandPaletteProps {
   isOpen: boolean
   onClose: () => void
 }
 
+type ResultType = 'dm_partner' | 'group' | 'message'
+
 interface SearchResult {
-  id: string
-  type: 'memory' | 'person' | 'conversation'
-  title: string
-  subtitle: string
+  objectID: string
+  type: ResultType
+  name: string
+  content?: string
+  conversation_id?: string
+  description?: string
+  sender_name?: string
+  email?: string
+  photo_url?: string
+  _highlightResult?: Record<string, { value: string; matchLevel: string }>
 }
 
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const t = useTheme()
-  const { user } = useAuth()
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
+  const syncedRef = useRef(false)
 
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [loading, setLoading] = useState(false)
 
-  // Cache conversations for fuse.js
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const conversationsLoaded = useRef(false)
-
-  const fuseInstance = useMemo(
-    () =>
-      new Fuse(conversations, {
-        keys: ['name', 'description'],
-        threshold: 0.4,
-      }),
-    [conversations],
-  )
-
-  // Fetch conversations on first open
+  // Trigger Algolia sync on first open (fire-and-forget)
   useEffect(() => {
-    if (!isOpen || conversationsLoaded.current || !user) return
-    listConversations({ user_id: user.uid, limit: 50 }).then((res) => {
-      setConversations(res.conversations)
-      conversationsLoaded.current = true
-    })
-  }, [isOpen, user])
+    if (!isOpen || syncedRef.current) return
+    syncedRef.current = true
+    fetch('/api/search/sync', { method: 'POST' }).catch(() => {})
+  }, [isOpen])
 
   // Auto-focus input on open
   useEffect(() => {
@@ -65,12 +53,11 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       setQuery('')
       setResults([])
       setActiveIndex(0)
-      // Small delay so portal is mounted
       requestAnimationFrame(() => inputRef.current?.focus())
     }
   }, [isOpen])
 
-  // Debounced search
+  // Debounced search via Algolia endpoint
   useEffect(() => {
     if (!query.trim()) {
       setResults([])
@@ -80,30 +67,25 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
     const timer = setTimeout(async () => {
       setLoading(true)
-      const q = query.trim()
-
-      const [memoryResults, peopleResults] = await Promise.all([
-        searchMemories(q),
-        searchPeople(q),
-      ])
-
-      // Client-side conversation search via fuse.js
-      const convResults = fuseInstance.search(q, { limit: 5 }).map(
-        (r): SearchResult => ({
-          id: r.item.id,
-          type: 'conversation',
-          title: r.item.name || 'Direct Message',
-          subtitle: r.item.description || r.item.type,
-        }),
-      )
-
-      setResults([...memoryResults, ...peopleResults, ...convResults])
+      try {
+        const res = await fetch(
+          `/api/search?q=${encodeURIComponent(query.trim())}&hitsPerPage=15`,
+        )
+        if (res.ok) {
+          const data = (await res.json()) as { hits?: SearchResult[] }
+          setResults(data.hits ?? [])
+        } else {
+          setResults([])
+        }
+      } catch {
+        setResults([])
+      }
       setActiveIndex(0)
       setLoading(false)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [query, fuseInstance])
+  }, [query])
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -127,16 +109,10 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const selectResult = useCallback(
     (result: SearchResult) => {
       onClose()
-      switch (result.type) {
-        case 'memory':
-          router.navigate({ to: '/memories' })
-          break
-        case 'person':
-          router.navigate({ to: '/chat' })
-          break
-        case 'conversation':
-          router.navigate({ to: `/chat/${result.id}` })
-          break
+      if (result.conversation_id) {
+        router.navigate({ to: `/chat/${result.conversation_id}` })
+      } else if (result.type === 'dm_partner') {
+        router.navigate({ to: '/chat' })
       }
     },
     [onClose, router],
@@ -155,25 +131,38 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
   const grouped = groupResults(results)
 
-  const iconForType = (type: SearchResult['type']) => {
+  const iconForType = (type: ResultType) => {
     switch (type) {
-      case 'memory':
-        return <Brain className="w-4 h-4 shrink-0 opacity-60" />
-      case 'person':
+      case 'dm_partner':
         return <User className="w-4 h-4 shrink-0 opacity-60" />
-      case 'conversation':
+      case 'group':
+        return <Users className="w-4 h-4 shrink-0 opacity-60" />
+      case 'message':
         return <MessageSquare className="w-4 h-4 shrink-0 opacity-60" />
     }
   }
 
-  const sectionLabel = (type: SearchResult['type']) => {
+  const sectionLabel = (type: ResultType) => {
     switch (type) {
-      case 'memory':
-        return 'Memories'
-      case 'person':
+      case 'dm_partner':
         return 'People'
-      case 'conversation':
-        return 'Conversations'
+      case 'group':
+        return 'Groups'
+      case 'message':
+        return 'Messages'
+    }
+  }
+
+  const subtitle = (result: SearchResult) => {
+    switch (result.type) {
+      case 'dm_partner':
+        return result.email || ''
+      case 'group':
+        return result.description || ''
+      case 'message':
+        return result.sender_name
+          ? `${result.sender_name}: ${(result.content ?? '').slice(0, 60)}`
+          : (result.content ?? '').slice(0, 80)
     }
   }
 
@@ -205,7 +194,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search memories, people, conversations..."
+            placeholder="Search people, groups, messages..."
             className={`flex-1 bg-transparent outline-none text-sm ${t.textPrimary} placeholder:opacity-50`}
           />
           <kbd className={`text-xs px-1.5 py-0.5 rounded ${t.buttonSecondary} opacity-60`}>
@@ -234,7 +223,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                 const isActive = idx === activeIndex
                 return (
                   <button
-                    key={result.id}
+                    key={result.objectID}
                     data-active={isActive}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
                       isActive ? t.active : `${t.hover}`
@@ -244,9 +233,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                   >
                     {iconForType(result.type)}
                     <div className="min-w-0 flex-1">
-                      <div className={`truncate ${t.textPrimary}`}>{result.title}</div>
+                      <div className={`truncate ${t.textPrimary}`}>{result.name}</div>
                       <div className={`truncate text-xs ${t.textMuted}`}>
-                        {result.subtitle}
+                        {subtitle(result)}
                       </div>
                     </div>
                   </button>
@@ -263,49 +252,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
 // --- helpers ---
 
-async function searchMemories(query: string): Promise<SearchResult[]> {
-  try {
-    const res = await fetch(
-      `/api/memories/search?query=${encodeURIComponent(query)}&limit=5`,
-    )
-    if (!res.ok) return []
-    const data = (await res.json()) as { memories: MemoryItem[] }
-    return data.memories.map((m) => ({
-      id: m.id,
-      type: 'memory' as const,
-      title: m.title || m.content.slice(0, 60),
-      subtitle: `by ${m.author_name} · ${m.scope}`,
-    }))
-  } catch {
-    return []
-  }
-}
-
-async function searchPeople(
-  query: string,
-): Promise<SearchResult[]> {
-  try {
-    const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
-    if (!res.ok) return []
-    const data = (await res.json()) as {
-      users: { uid: string; displayName: string | null; email: string | null }[]
-    }
-    return data.users.slice(0, 5).map((u) => ({
-      id: u.uid,
-      type: 'person' as const,
-      title: u.displayName || u.email || u.uid,
-      subtitle: u.email || '',
-    }))
-  } catch {
-    return []
-  }
-}
-
-function groupResults(
-  results: SearchResult[],
-): [SearchResult['type'], SearchResult[]][] {
-  const order: SearchResult['type'][] = ['memory', 'person', 'conversation']
-  const map = new Map<SearchResult['type'], SearchResult[]>()
+function groupResults(results: SearchResult[]): [ResultType, SearchResult[]][] {
+  const order: ResultType[] = ['dm_partner', 'group', 'message']
+  const map = new Map<ResultType, SearchResult[]>()
   for (const r of results) {
     if (!map.has(r.type)) map.set(r.type, [])
     map.get(r.type)!.push(r)
