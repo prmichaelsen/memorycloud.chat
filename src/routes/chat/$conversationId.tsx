@@ -93,11 +93,14 @@ function ConversationView() {
     })
   }
 
+  // SSR data from beforeLoad
+  const { initialConversation, initialMessages, initialProfiles } = Route.useRouteContext()
+
   // State
-  const [conversation, setConversation] = useState<Conversation | null>(null)
-  const [profiles, setProfiles] = useState<Record<string, ProfileSummary>>({})
-  const [messages, setMessages] = useState<Message[]>([])
-  const [loading, setLoading] = useState(true)
+  const [conversation, setConversation] = useState<Conversation | null>(initialConversation ?? null)
+  const [profiles, setProfiles] = useState<Record<string, ProfileSummary>>(initialProfiles ?? {})
+  const [messages, setMessages] = useState<Message[]>(initialMessages ?? [])
+  const [loading, setLoading] = useState(!initialConversation)
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
@@ -121,6 +124,7 @@ function ConversationView() {
 
   // Load conversation and initial messages
   useEffect(() => {
+    return;
     if (!user || !conversationId) return
 
     let cancelled = false
@@ -205,10 +209,10 @@ function ConversationView() {
 
     switch (wsMessage.type) {
       case 'messages_loaded': {
-        const event = wsMessage as ServerMessagesLoadedEvent
-        setMessages(event.messages)
-        setHasMore(event.hasMore)
-        setLoading(false)
+        // const event = wsMessage as ServerMessagesLoadedEvent
+        // setMessages(event.messages)
+        // setHasMore(event.hasMore)
+        // setLoading(false)
         break
       }
 
