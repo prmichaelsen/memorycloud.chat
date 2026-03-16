@@ -15,6 +15,7 @@ import { Search, MessageSquare } from 'lucide-react'
 import { getAuthSession } from '@/lib/auth/server-fn'
 import { ConversationDatabaseService } from '@/services/conversation-database.service'
 import { buildProfileMap } from '@/lib/profile-map'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export const Route = createFileRoute('/chat')({
   component: ChatLayout,
@@ -25,8 +26,8 @@ export const Route = createFileRoute('/chat')({
       const user = await getAuthSession()
       if (!user) return { initialConversations: [], initialProfiles: {} }
       const result = await ConversationDatabaseService.listConversations({ user_id: user.uid })
-      console.log('[chat/beforeLoad] conversations', JSON.stringify({ count: result.conversations.length, sample: result.conversations.slice(0, 2).map(c => ({ id: c.id, type: c.type, name: c.name, participant_ids: c.participant_ids })) }))
-      const allIds = [...new Set(result.conversations.flatMap((c) => c.participant_ids))]
+      console.log('[chat/beforeLoad] conversations', JSON.stringify({ count: result.conversations.length, sample: result.conversations.slice(0, 2).map(c => ({ id: c.id, type: c.type, title: c.title, participant_user_ids: c.participant_user_ids })) }))
+      const allIds = [...new Set(result.conversations.flatMap((c) => c.participant_user_ids ?? []))]
       console.log('[chat/beforeLoad] resolving profiles for', allIds)
       const profiles = await buildProfileMap(allIds)
       console.log('[chat/beforeLoad] profiles', JSON.stringify(profiles))
@@ -110,16 +111,20 @@ function ChatLayout() {
   return (
     <div className={`flex h-[calc(100vh-3.5rem)] overflow-hidden ${t.page}`}>
       {/* Conversation sidebar */}
-      <ConversationSidebar
-        onNewDm={() => setShowNewDm(true)}
-        onNewGroup={() => setShowNewGroup(true)}
-        initialConversations={initialConversations}
-        initialProfiles={initialProfiles}
-      />
+      <ErrorBoundary name="ConversationSidebar">
+        <ConversationSidebar
+          onNewDm={() => setShowNewDm(true)}
+          onNewGroup={() => setShowNewGroup(true)}
+          initialConversations={initialConversations}
+          initialProfiles={initialProfiles}
+        />
+      </ErrorBoundary>
 
       {/* Main conversation area */}
       <main className="flex-1 flex flex-col min-w-0 min-h-0">
-        <Outlet />
+        <ErrorBoundary name="ConversationView">
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {/* New DM modal */}

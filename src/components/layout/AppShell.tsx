@@ -12,6 +12,7 @@ import { useAuth } from '@/components/auth/AuthContext'
 import { useNotifications } from '@/hooks/useNotifications'
 import { NotificationClientService } from '@/services/notification-client.service'
 import { UnifiedHeader, HEADER_HEIGHT_CLASS } from './UnifiedHeader'
+import { HeaderProvider, useHeader } from '@/contexts/HeaderContext'
 import { Sidebar } from './Sidebar'
 import { MobileBottomNav } from './MobileBottomNav'
 // FCM disabled until Firebase appId is configured
@@ -19,6 +20,7 @@ import { MobileBottomNav } from './MobileBottomNav'
 // import { initializeFCM } from '@/lib/fcm'
 import type { Notification } from '@/types/notifications'
 import { CommandPalette } from '@/components/search/CommandPalette'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 interface AppShellProps {
   currentTheme: ThemeName
@@ -33,14 +35,8 @@ export function AppShell({ currentTheme, onThemeToggle }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
 
-  // Derive current view title from route matches
-  const currentTitle = (() => {
-    const lastMatch = matches[matches.length - 1]
-    if (lastMatch?.context && typeof lastMatch.context === 'object' && 'title' in lastMatch.context) {
-      return lastMatch.context.title as string
-    }
-    return undefined
-  })()
+  // Header title/actions from child routes via context
+  const { title: currentTitle, headerActions } = useHeader()
 
   // Notification system
   const {
@@ -109,6 +105,7 @@ export function AppShell({ currentTheme, onThemeToggle }: AppShellProps) {
       {/* Fixed Header */}
       <UnifiedHeader
         title={currentTitle}
+        headerActions={headerActions}
         onToggleSidebar={handleToggleSidebar}
         sidebarOpen={sidebarOpen}
         currentTheme={currentTheme}
@@ -128,7 +125,9 @@ export function AppShell({ currentTheme, onThemeToggle }: AppShellProps) {
       <main
         className={`${HEADER_HEIGHT_CLASS} lg:pl-44 pb-16 md:pb-0 min-h-screen`}
       >
-        <Outlet />
+        <ErrorBoundary name="PageContent">
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {/* Mobile Bottom Nav */}

@@ -41,6 +41,7 @@ import { buildProfileMap } from '@/lib/profile-map'
 import { MessageDatabaseService } from '@/services/message-database.service'
 import { getTextContent } from '@/lib/message-content'
 import { useHeader } from '@/contexts/HeaderContext'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 const CONVERSATION_TABS: SubHeaderTab[] = [
   { id: 'chat', label: 'Chat' },
@@ -507,35 +508,41 @@ function ConversationView() {
         {activeTab === 'ghost' ? (
           /* Ghost chat view */
           <div className="flex-1 min-h-0">
-            <GhostChatView
-              ghostOwnerId={
-                conversation?.type === 'group'
-                  ? `group:${conversationId}`
-                  : (conversation?.participant_user_ids ?? []).find((id) => id !== user?.uid) ?? conversationId
-              }
-            />
+            <ErrorBoundary name="GhostChatView">
+              <GhostChatView
+                ghostOwnerId={
+                  conversation?.type === 'group'
+                    ? `group:${conversationId}`
+                    : (conversation?.participant_user_ids ?? []).find((id) => id !== user?.uid) ?? conversationId
+                }
+              />
+            </ErrorBoundary>
           </div>
         ) : (
           <>
             {/* Messages */}
-            <MessageList
-              messages={messages}
-              conversationId={conversationId}
-              loading={loadingMore}
-              hasMore={hasMore}
-              onLoadMore={loadMore}
-              typingUsers={typingUsers}
-              streamingBlocks={streamingBlocks}
-            />
+            <ErrorBoundary name="MessageList">
+              <MessageList
+                messages={messages}
+                conversationId={conversationId}
+                loading={loadingMore}
+                hasMore={hasMore}
+                onLoadMore={loadMore}
+                typingUsers={typingUsers}
+                streamingBlocks={streamingBlocks}
+              />
+            </ErrorBoundary>
 
             {/* Compose */}
-            <MessageCompose
-              conversationId={conversationId}
-              senderId={user?.uid ?? ''}
-              onSend={handleSend}
-              onTypingStart={handleTypingStart}
-              onTypingStop={handleTypingStop}
-            />
+            <ErrorBoundary name="MessageCompose">
+              <MessageCompose
+                conversationId={conversationId}
+                senderId={user?.uid ?? ''}
+                onSend={handleSend}
+                onTypingStart={handleTypingStart}
+                onTypingStop={handleTypingStop}
+              />
+            </ErrorBoundary>
           </>
         )}
       </div>
