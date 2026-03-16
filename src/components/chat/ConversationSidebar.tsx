@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { Virtuoso } from 'react-virtuoso'
 import { Link, useParams } from '@tanstack/react-router'
 import { MessageSquare, Users, Menu, X, Plus } from 'lucide-react'
 import { useTheme } from '@/lib/theming'
@@ -140,7 +141,7 @@ export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations 
       </div>
 
       {/* Conversation list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 min-h-0">
         {loading ? (
           <div className="p-4 space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -167,14 +168,16 @@ export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations 
             </button>
           </div>
         ) : (
-          <nav className="py-1">
-            {conversations.map((conv) => {
+          <Virtuoso
+            style={{ height: '100%' }}
+            data={conversations}
+            computeItemKey={(_index, conv) => conv.id}
+            itemContent={(_index, conv) => {
               const isActive = conv.id === activeConversationId
               const name = getConversationName(conv)
 
               return (
                 <Link
-                  key={conv.id}
                   to="/chat/$conversationId"
                   params={{ conversationId: conv.id }}
                   onClick={() => setMobileOpen(false)}
@@ -215,8 +218,8 @@ export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations 
                   </div>
                 </Link>
               )
-            })}
-          </nav>
+            }}
+          />
         )}
       </div>
     </div>

@@ -100,7 +100,7 @@ function ChatLayout() {
   }
 
   return (
-    <div className={`flex h-screen ${t.page}`}>
+    <div className={`flex h-screen overflow-hidden ${t.page}`}>
       {/* Conversation sidebar */}
       <ConversationSidebar
         onNewDm={() => setShowNewDm(true)}
