@@ -326,6 +326,29 @@ export class ConversationDatabaseService {
   }
 
   /**
+   * Ensure a user-scoped conversation exists. Idempotent — no-ops if already present.
+   */
+  static async ensureUserConversation(
+    userId: string,
+    conversationId: string,
+    defaults: { title: string; type: ConversationDoc['type'] },
+  ): Promise<void> {
+    initFirebaseAdmin()
+    const path = getUserConversations(userId)
+    const existing = await getDocument(path, conversationId)
+    if (existing) return
+    const now = new Date().toISOString()
+    await setDocument(path, conversationId, {
+      title: defaults.title,
+      type: defaults.type,
+      user_id: userId,
+      created_at: now,
+      updated_at: now,
+      message_count: 0,
+    })
+  }
+
+  /**
    * Delete a conversation from the shared collection.
    */
   static async deleteConversation(conversationId: string): Promise<void> {

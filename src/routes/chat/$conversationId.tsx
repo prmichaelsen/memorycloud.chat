@@ -56,7 +56,21 @@ export const Route = createFileRoute('/chat/$conversationId')({
     try {
       const user = await getAuthSession()
       if (!user) return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false }
-      const conversation = await ConversationDatabaseService.getConversation(params.conversationId, user.uid)
+      let conversation = await ConversationDatabaseService.getConversation(params.conversationId, user.uid)
+
+      if (!conversation) {
+        switch (params.conversationId) {
+          case 'main':
+            await ConversationDatabaseService.ensureUserConversation(user.uid, 'main', { title: 'Agent', type: 'chat' })
+            conversation = await ConversationDatabaseService.getConversation('main', user.uid)
+            break
+          case 'ghost:space:the_void':
+            await ConversationDatabaseService.ensureUserConversation(user.uid, 'ghost:space:the_void', { title: 'The Void', type: 'chat' })
+            conversation = await ConversationDatabaseService.getConversation('ghost:space:the_void', user.uid)
+            break
+        }
+      }
+
       const convType = conversation?.type === 'dm' || conversation?.type === 'group' ? conversation.type : undefined
       const msgResult = await MessageDatabaseService.listMessages(params.conversationId, 50, undefined, user.uid, convType)
       const profiles = conversation
