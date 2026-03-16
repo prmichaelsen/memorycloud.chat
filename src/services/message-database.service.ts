@@ -9,6 +9,7 @@
 import {
   getDocument,
   setDocument,
+  addDocument,
   queryDocuments,
   deleteDocument,
 } from '@prmichaelsen/firebase-admin-sdk-v8'
@@ -130,10 +131,8 @@ export class MessageDatabaseService {
       ? resolveMessagesPath(conversationId, input.sender_user_id, conversationType)
       : sharedMessagesCollection(conversationId)
     const now = new Date().toISOString()
-    const id = crypto.randomUUID()
 
-    const message: Message = {
-      id,
+    const messageData = {
       conversation_id: conversationId,
       role: input.role ?? 'user',
       content: input.content,
@@ -145,8 +144,8 @@ export class MessageDatabaseService {
       ...(input.created_for_user_id && { created_for_user_id: input.created_for_user_id }),
     }
 
-    await setDocument(collection, id, message)
-    return message
+    const docRef = await addDocument(collection, messageData)
+    return { ...messageData, id: docRef.id } as Message
   }
 
   /**
