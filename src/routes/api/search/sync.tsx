@@ -10,10 +10,14 @@ import { ConversationDatabaseService } from '@/services/conversation-database.se
 import { queryDocuments } from '@prmichaelsen/firebase-admin-sdk-v8'
 import {
   indexDocuments,
+  initializeIndex,
   buildDmPartnerDoc,
   buildGroupDoc,
   buildMessageDoc,
 } from '@/services/search.service'
+import { createLogger } from '@/lib/logger'
+
+const log = createLogger('api/search/sync')
 
 export const Route = createFileRoute('/api/search/sync')({
   server: {
@@ -29,6 +33,8 @@ export const Route = createFileRoute('/api/search/sync')({
         const userId = session.uid
 
         try {
+          // Ensure index exists with correct settings
+          await initializeIndex()
           // Fetch user's DMs and groups in parallel
           const [dms, groups] = await Promise.all([
             ConversationDatabaseService.getUserDMs(userId, 100),
@@ -129,7 +135,7 @@ export const Route = createFileRoute('/api/search/sync')({
             messages: docs.filter((d) => d.type === 'message').length,
           })
         } catch (error) {
-          console.error('[API] Search sync error:', error)
+          log.error({ err: error }, 'Search sync error')
           return Response.json(
             { error: 'Sync failed', message: error instanceof Error ? error.message : 'Unknown error' },
             { status: 500 },
