@@ -17,7 +17,7 @@ import type { Message, MessageContent } from '@/types/conversations'
 const log = createLogger('MessageDatabaseService')
 
 function messagesCollection(conversationId: string): string {
-  return `conversations/${conversationId}/messages`
+  return `agentbase.conversations/${conversationId}/messages`
 }
 
 function readReceiptsCollection(userId: string): string {
@@ -40,27 +40,9 @@ export interface MessageListResult {
   has_more: boolean
 }
 
-/**
- * Normalize a Firestore document into the canonical Message shape.
- * Handles old documents that use `created_at`, `sender_id`, etc.
- */
-function normalizeMessage(doc: any, id: string, conversationId: string): Message {
-  return {
-    id,
-    conversation_id: conversationId,
-    role: doc.role ?? 'user',
-    content: doc.content ?? '',
-    timestamp: doc.timestamp ?? doc.created_at ?? new Date().toISOString(),
-    sender_user_id: doc.sender_user_id ?? doc.sender_id,
-    visible_to_user_ids: doc.visible_to_user_ids ?? null,
-    ...(doc.location && { location: doc.location }),
-    ...(doc.toolCallId && { toolCallId: doc.toolCallId }),
-    ...(doc.progressStream && { progressStream: doc.progressStream }),
-    ...(doc.metadata && { metadata: doc.metadata }),
-    ...(doc.created_for_user_id && { created_for_user_id: doc.created_for_user_id }),
-    ...(doc.is_tool_interaction != null && { is_tool_interaction: doc.is_tool_interaction }),
-    ...(doc.cancelled != null && { cancelled: doc.cancelled }),
-  }
+/** Build a Message from a Firestore doc (mirrors agentbase.me pattern). */
+function toMessage(doc: any, id: string, conversationId: string): Message {
+  return { id, conversation_id: conversationId, ...doc } as Message
 }
 
 export class MessageDatabaseService {
@@ -90,7 +72,7 @@ export class MessageDatabaseService {
       const slice = hasMore ? docs.slice(0, limit) : docs
 
       const messages: Message[] = slice.map((doc) =>
-        normalizeMessage(doc.data, doc.id, conversationId),
+        toMessage(doc.data, doc.id, conversationId),
       )
 
       const nextCursor =
@@ -147,7 +129,7 @@ export class MessageDatabaseService {
     try {
       const doc = await getDocument(collection, messageId)
       if (!doc) return null
-      return normalizeMessage(doc, messageId, conversationId)
+      return toMessage(doc, messageId, conversationId)
     } catch (error) {
       log.error({ err: error }, 'getMessage failed')
       return null
