@@ -187,7 +187,11 @@ function ConversationView() {
           visible_to_user_ids: event.message.visible_to_user_ids,
         }
 
-        setMessages((prev) => [...prev, newMsg])
+        // Deduplicate — sender already added optimistically
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev
+          return [...prev, newMsg]
+        })
 
         // Update sidebar last_message preview
         updateLastMessage(conversationId, {
@@ -367,20 +371,7 @@ function ConversationView() {
       // Optimistic: add to local state immediately
       setMessages((prev) => [...prev, message])
 
-      // Broadcast via WebSocket
-      const wsMsg: NewMessageEvent = {
-        type: 'message_new',
-        conversation_id: conversationId,
-        message: {
-          id: message.id,
-          sender_user_id: message.sender_user_id,
-          content: message.content,
-          timestamp: message.timestamp,
-          visible_to_user_ids: message.visible_to_user_ids ?? null,
-          role: message.role,
-        },
-      }
-      wsSend(wsMsg)
+      // Server POST already broadcasts via ChatRoom DO — no client wsSend needed
 
       // Update conversation preview
       updateLastMessage(conversationId, {

@@ -215,6 +215,28 @@ export class ConversationDatabaseService {
   }
 
   /**
+   * Find an existing DM between two participants (returns raw doc or null).
+   */
+  static async findDmByParticipants(userA: string, userB: string): Promise<ConversationDoc | null> {
+    try {
+      const path = getSharedConversations()
+      const results = await queryDocuments(path, {
+        where: [
+          { field: 'participant_user_ids', op: 'array-contains', value: userA },
+          { field: 'is_dm', op: '==', value: true },
+        ],
+        limit: 50,
+      })
+      const match = results?.find((doc: any) => doc.participant_user_ids?.includes(userB))
+      if (!match) return null
+      return { id: match.id ?? match._id, ...match } as ConversationDoc
+    } catch (error) {
+      log.error({ err: error }, 'findDmByParticipants failed')
+      return null
+    }
+  }
+
+  /**
    * Get a single conversation by ID (tries shared first, then user-scoped).
    */
   static async getConversation(

@@ -99,6 +99,16 @@ export const Route = createFileRoute('/api/conversations/')({
           )
         }
 
+        if (type === 'dm' && participant_ids?.length === 2) {
+          const existing = await ConversationDatabaseService.findDmByParticipants(
+            participant_ids[0], participant_ids[1]
+          )
+          if (existing) {
+            log.debug({ conversationId: existing.id }, 'returning existing DM')
+            return Response.json(existing, { status: 200 })
+          }
+        }
+
         try {
           const conversation = await ConversationDatabaseService.createConversation({
             type,

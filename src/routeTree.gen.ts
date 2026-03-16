@@ -13,14 +13,17 @@ import { Route as VoidRouteImport } from './routes/void'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as FriendsRouteImport } from './routes/friends'
+import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as ConversationsIndexRouteImport } from './routes/conversations/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as GroupLinksCodeRouteImport } from './routes/group-links/$code'
 import { Route as FriendLinksCodeRouteImport } from './routes/friend-links/$code'
 import { Route as DmLinksCodeRouteImport } from './routes/dm-links/$code'
+import { Route as ConversationsConversationIdRouteImport } from './routes/conversations/$conversationId'
 import { Route as ChatConversationIdRouteImport } from './routes/chat/$conversationId'
 import { Route as ApiWsRouteImport } from './routes/api/ws'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
@@ -93,6 +96,11 @@ const FriendsRoute = FriendsRouteImport.update({
   path: '/friends',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConversationsRoute = ConversationsRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -112,6 +120,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SettingsRoute,
+} as any)
+const ConversationsIndexRoute = ConversationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConversationsRoute,
 } as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
@@ -133,6 +146,12 @@ const DmLinksCodeRoute = DmLinksCodeRouteImport.update({
   path: '/dm-links/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConversationsConversationIdRoute =
+  ConversationsConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => ConversationsRoute,
+  } as any)
 const ChatConversationIdRoute = ChatConversationIdRouteImport.update({
   id: '/$conversationId',
   path: '/$conversationId',
@@ -413,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/conversations': typeof ConversationsRouteWithChildren
   '/friends': typeof FriendsRoute
   '/memories': typeof MemoriesRoute
   '/settings': typeof SettingsRouteWithChildren
@@ -422,10 +442,12 @@ export interface FileRoutesByFullPath {
   '/api/upload': typeof ApiUploadRoute
   '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
   '/chat/': typeof ChatIndexRoute
+  '/conversations/': typeof ConversationsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -485,10 +507,12 @@ export interface FileRoutesByTo {
   '/api/upload': typeof ApiUploadRoute
   '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
   '/chat': typeof ChatIndexRoute
+  '/conversations': typeof ConversationsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -541,6 +565,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/conversations': typeof ConversationsRouteWithChildren
   '/friends': typeof FriendsRoute
   '/memories': typeof MemoriesRoute
   '/settings': typeof SettingsRouteWithChildren
@@ -550,10 +575,12 @@ export interface FileRoutesById {
   '/api/upload': typeof ApiUploadRoute
   '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/conversations/$conversationId': typeof ConversationsConversationIdRoute
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
   '/chat/': typeof ChatIndexRoute
+  '/conversations/': typeof ConversationsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -608,6 +635,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/chat'
+    | '/conversations'
     | '/friends'
     | '/memories'
     | '/settings'
@@ -617,10 +645,12 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/api/ws'
     | '/chat/$conversationId'
+    | '/conversations/$conversationId'
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
     | '/chat/'
+    | '/conversations/'
     | '/settings/'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -680,10 +710,12 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/api/ws'
     | '/chat/$conversationId'
+    | '/conversations/$conversationId'
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
     | '/chat'
+    | '/conversations'
     | '/settings'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -735,6 +767,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/chat'
+    | '/conversations'
     | '/friends'
     | '/memories'
     | '/settings'
@@ -744,10 +777,12 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/api/ws'
     | '/chat/$conversationId'
+    | '/conversations/$conversationId'
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
     | '/chat/'
+    | '/conversations/'
     | '/settings/'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -801,6 +836,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRouteWithChildren
+  ConversationsRoute: typeof ConversationsRouteWithChildren
   FriendsRoute: typeof FriendsRoute
   MemoriesRoute: typeof MemoriesRoute
   SettingsRoute: typeof SettingsRouteWithChildren
@@ -874,6 +910,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FriendsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conversations': {
+      id: '/conversations'
+      path: '/conversations'
+      fullPath: '/conversations'
+      preLoaderRoute: typeof ConversationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
@@ -902,6 +945,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/conversations/': {
+      id: '/conversations/'
+      path: '/'
+      fullPath: '/conversations/'
+      preLoaderRoute: typeof ConversationsIndexRouteImport
+      parentRoute: typeof ConversationsRoute
+    }
     '/chat/': {
       id: '/chat/'
       path: '/'
@@ -929,6 +979,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dm-links/$code'
       preLoaderRoute: typeof DmLinksCodeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/conversations/$conversationId': {
+      id: '/conversations/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/conversations/$conversationId'
+      preLoaderRoute: typeof ConversationsConversationIdRouteImport
+      parentRoute: typeof ConversationsRoute
     }
     '/chat/$conversationId': {
       id: '/chat/$conversationId'
@@ -1302,6 +1359,20 @@ const ChatRouteChildren: ChatRouteChildren = {
 
 const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
 
+interface ConversationsRouteChildren {
+  ConversationsConversationIdRoute: typeof ConversationsConversationIdRoute
+  ConversationsIndexRoute: typeof ConversationsIndexRoute
+}
+
+const ConversationsRouteChildren: ConversationsRouteChildren = {
+  ConversationsConversationIdRoute: ConversationsConversationIdRoute,
+  ConversationsIndexRoute: ConversationsIndexRoute,
+}
+
+const ConversationsRouteWithChildren = ConversationsRoute._addFileChildren(
+  ConversationsRouteChildren,
+)
+
 interface SettingsRouteChildren {
   SettingsIndexRoute: typeof SettingsIndexRoute
 }
@@ -1442,6 +1513,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRouteWithChildren,
+  ConversationsRoute: ConversationsRouteWithChildren,
   FriendsRoute: FriendsRoute,
   MemoriesRoute: MemoriesRoute,
   SettingsRoute: SettingsRouteWithChildren,

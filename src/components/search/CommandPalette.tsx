@@ -8,6 +8,8 @@ import { createPortal } from 'react-dom'
 import { useRouter } from '@tanstack/react-router'
 import { User, Users, MessageSquare, Search, Loader2 } from 'lucide-react'
 import { useTheme } from '@/lib/theming'
+import { useAuth } from '@/components/auth/AuthContext'
+import { createConversation } from '@/services/conversation.service'
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -85,6 +87,7 @@ function normalizeResults(data: ApiResponse): SearchResult[] {
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const t = useTheme()
   const router = useRouter()
+  const { user } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
 
   const [query, setQuery] = useState('')
@@ -152,15 +155,20 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   )
 
   const selectResult = useCallback(
-    (result: SearchResult) => {
+    async (result: SearchResult) => {
       onClose()
       if (result.conversationId) {
         router.navigate({ to: `/chat/${result.conversationId}` })
-      } else if (result.section === 'people') {
-        router.navigate({ to: '/chat' })
+      } else if (result.section === 'people' && user) {
+        const conversation = await createConversation({
+          type: 'dm',
+          participant_ids: [user.uid, result.objectID],
+          created_by: user.uid,
+        })
+        router.navigate({ to: `/chat/${conversation.id}` })
       }
     },
-    [onClose, router],
+    [onClose, router, user],
   )
 
   // Scroll active item into view
