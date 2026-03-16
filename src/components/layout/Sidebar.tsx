@@ -6,7 +6,7 @@
  * Includes transition animations.
  */
 
-import { X, LogIn, Settings } from 'lucide-react'
+import { LogIn, Settings } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useTheme } from '@/lib/theming'
@@ -101,19 +101,6 @@ export function Sidebar({
         }`}
         aria-label="Sidebar navigation"
       >
-        {/* Mobile close button */}
-        <div className="flex items-center justify-between px-4 pt-4 lg:hidden">
-          <span className={`text-sm font-semibold ${t.textPrimary}`}>Menu</span>
-          <button
-            type="button"
-            onClick={onClose}
-            className={`p-1 rounded-md ${t.buttonGhost} transition-colors`}
-            aria-label="Close sidebar"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
         {/* Tab Navigation */}
         <div className="px-1.5 pt-3 pb-2">
           <TabNavigation tabs={tabs} orientation="vertical" />
