@@ -3,7 +3,7 @@
  * Name, description, invite members by search.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { Users, X, Search, Plus } from 'lucide-react'
 import { useTheme } from '@/lib/theming'
 import { Modal } from '@/components/ui/Modal'
@@ -40,7 +40,8 @@ export function GroupCreateModal({
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Stub: user search — in production, calls a server function
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const searchUsers = useCallback(
     async (query: string) => {
       if (query.length < 2) {
@@ -50,12 +51,9 @@ export function GroupCreateModal({
 
       setSearching(true)
       try {
-        // Stub: server function for user search
-        // const results = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
-        // setSearchResults(await results.json())
-
-        // For development, return empty results
-        setSearchResults([])
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+        const data: { users: SearchUser[] } = await res.json()
+        setSearchResults(data.users)
       } catch {
         // Search error
       } finally {
@@ -68,7 +66,14 @@ export function GroupCreateModal({
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value
     setSearchQuery(query)
-    searchUsers(query)
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    if (query.length < 2) {
+      setSearchResults([])
+      return
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      searchUsers(query)
+    }, 300)
   }
 
   function addUser(searchUser: SearchUser) {
