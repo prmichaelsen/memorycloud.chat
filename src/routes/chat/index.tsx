@@ -49,9 +49,9 @@ function ChatIndex() {
         const profile = profiles[r.related_user_id] ?? {}
         return {
           uid: r.related_user_id,
-          displayName: profile.displayName ?? 'Unknown',
-          email: profile.email ?? '',
-          photoURL: profile.photoURL ?? null,
+          displayName: profile.display_name ?? profile.username ?? 'Unknown',
+          email: profile.username ? `@${profile.username}` : '',
+          photoURL: profile.profile_picture_path ?? null,
         }
       })
       setFriends(friendList)
