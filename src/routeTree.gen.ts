@@ -13,17 +13,18 @@ import { Route as VoidRouteImport } from './routes/void'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as FriendsRouteImport } from './routes/friends'
-import { Route as DemoRouteImport } from './routes/demo'
 import { Route as ConversationsRouteImport } from './routes/conversations'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as DemoIndexRouteImport } from './routes/demo/index'
 import { Route as ConversationsIndexRouteImport } from './routes/conversations/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as GroupLinksCodeRouteImport } from './routes/group-links/$code'
 import { Route as FriendLinksCodeRouteImport } from './routes/friend-links/$code'
 import { Route as DmLinksCodeRouteImport } from './routes/dm-links/$code'
+import { Route as DemoColorPickersRouteImport } from './routes/demo/color-pickers'
 import { Route as ConversationsConversationIdRouteImport } from './routes/conversations/$conversationId'
 import { Route as ChatConversationIdRouteImport } from './routes/chat/$conversationId'
 import { Route as ApiWsRouteImport } from './routes/api/ws'
@@ -98,11 +99,6 @@ const FriendsRoute = FriendsRouteImport.update({
   path: '/friends',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DemoRoute = DemoRouteImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ConversationsRoute = ConversationsRouteImport.update({
   id: '/conversations',
   path: '/conversations',
@@ -128,6 +124,11 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => SettingsRoute,
 } as any)
+const DemoIndexRoute = DemoIndexRouteImport.update({
+  id: '/demo/',
+  path: '/demo/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConversationsIndexRoute = ConversationsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -151,6 +152,11 @@ const FriendLinksCodeRoute = FriendLinksCodeRouteImport.update({
 const DmLinksCodeRoute = DmLinksCodeRouteImport.update({
   id: '/dm-links/$code',
   path: '/dm-links/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoColorPickersRoute = DemoColorPickersRouteImport.update({
+  id: '/demo/color-pickers',
+  path: '/demo/color-pickers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConversationsConversationIdRoute =
@@ -446,7 +452,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
   '/conversations': typeof ConversationsRouteWithChildren
-  '/demo': typeof DemoRoute
   '/friends': typeof FriendsRoute
   '/memories': typeof MemoriesRoute
   '/settings': typeof SettingsRouteWithChildren
@@ -457,11 +462,13 @@ export interface FileRoutesByFullPath {
   '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
   '/conversations/$conversationId': typeof ConversationsConversationIdRoute
+  '/demo/color-pickers': typeof DemoColorPickersRoute
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
   '/chat/': typeof ChatIndexRoute
   '/conversations/': typeof ConversationsIndexRoute
+  '/demo/': typeof DemoIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -514,7 +521,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/demo': typeof DemoRoute
   '/friends': typeof FriendsRoute
   '/memories': typeof MemoriesRoute
   '/void': typeof VoidRoute
@@ -524,11 +530,13 @@ export interface FileRoutesByTo {
   '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
   '/conversations/$conversationId': typeof ConversationsConversationIdRoute
+  '/demo/color-pickers': typeof DemoColorPickersRoute
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
   '/chat': typeof ChatIndexRoute
   '/conversations': typeof ConversationsIndexRoute
+  '/demo': typeof DemoIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -583,7 +591,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
   '/conversations': typeof ConversationsRouteWithChildren
-  '/demo': typeof DemoRoute
   '/friends': typeof FriendsRoute
   '/memories': typeof MemoriesRoute
   '/settings': typeof SettingsRouteWithChildren
@@ -594,11 +601,13 @@ export interface FileRoutesById {
   '/api/ws': typeof ApiWsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
   '/conversations/$conversationId': typeof ConversationsConversationIdRoute
+  '/demo/color-pickers': typeof DemoColorPickersRoute
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
   '/chat/': typeof ChatIndexRoute
   '/conversations/': typeof ConversationsIndexRoute
+  '/demo/': typeof DemoIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -655,7 +664,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/conversations'
-    | '/demo'
     | '/friends'
     | '/memories'
     | '/settings'
@@ -666,11 +674,13 @@ export interface FileRouteTypes {
     | '/api/ws'
     | '/chat/$conversationId'
     | '/conversations/$conversationId'
+    | '/demo/color-pickers'
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
     | '/chat/'
     | '/conversations/'
+    | '/demo/'
     | '/settings/'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -723,7 +733,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/demo'
     | '/friends'
     | '/memories'
     | '/void'
@@ -733,11 +742,13 @@ export interface FileRouteTypes {
     | '/api/ws'
     | '/chat/$conversationId'
     | '/conversations/$conversationId'
+    | '/demo/color-pickers'
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
     | '/chat'
     | '/conversations'
+    | '/demo'
     | '/settings'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -791,7 +802,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/conversations'
-    | '/demo'
     | '/friends'
     | '/memories'
     | '/settings'
@@ -802,11 +812,13 @@ export interface FileRouteTypes {
     | '/api/ws'
     | '/chat/$conversationId'
     | '/conversations/$conversationId'
+    | '/demo/color-pickers'
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
     | '/chat/'
     | '/conversations/'
+    | '/demo/'
     | '/settings/'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -862,7 +874,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRouteWithChildren
   ConversationsRoute: typeof ConversationsRouteWithChildren
-  DemoRoute: typeof DemoRoute
   FriendsRoute: typeof FriendsRoute
   MemoriesRoute: typeof MemoriesRoute
   SettingsRoute: typeof SettingsRouteWithChildren
@@ -871,9 +882,11 @@ export interface RootRouteChildren {
   ApiSearchRoute: typeof ApiSearchRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ApiWsRoute: typeof ApiWsRoute
+  DemoColorPickersRoute: typeof DemoColorPickersRoute
   DmLinksCodeRoute: typeof DmLinksCodeRoute
   FriendLinksCodeRoute: typeof FriendLinksCodeRoute
   GroupLinksCodeRoute: typeof GroupLinksCodeRoute
+  DemoIndexRoute: typeof DemoIndexRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
   ApiAuthSessionRoute: typeof ApiAuthSessionRoute
@@ -937,13 +950,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FriendsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo': {
-      id: '/demo'
-      path: '/demo'
-      fullPath: '/demo'
-      preLoaderRoute: typeof DemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/conversations': {
       id: '/conversations'
       path: '/conversations'
@@ -979,6 +985,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof SettingsRoute
     }
+    '/demo/': {
+      id: '/demo/'
+      path: '/demo'
+      fullPath: '/demo/'
+      preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conversations/': {
       id: '/conversations/'
       path: '/'
@@ -1012,6 +1025,13 @@ declare module '@tanstack/react-router' {
       path: '/dm-links/$code'
       fullPath: '/dm-links/$code'
       preLoaderRoute: typeof DmLinksCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/color-pickers': {
+      id: '/demo/color-pickers'
+      path: '/demo/color-pickers'
+      fullPath: '/demo/color-pickers'
+      preLoaderRoute: typeof DemoColorPickersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conversations/$conversationId': {
@@ -1555,7 +1575,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ChatRoute: ChatRouteWithChildren,
   ConversationsRoute: ConversationsRouteWithChildren,
-  DemoRoute: DemoRoute,
   FriendsRoute: FriendsRoute,
   MemoriesRoute: MemoriesRoute,
   SettingsRoute: SettingsRouteWithChildren,
@@ -1564,9 +1583,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSearchRoute: ApiSearchRoute,
   ApiUploadRoute: ApiUploadRoute,
   ApiWsRoute: ApiWsRoute,
+  DemoColorPickersRoute: DemoColorPickersRoute,
   DmLinksCodeRoute: DmLinksCodeRoute,
   FriendLinksCodeRoute: FriendLinksCodeRoute,
   GroupLinksCodeRoute: GroupLinksCodeRoute,
+  DemoIndexRoute: DemoIndexRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,
   ApiAuthSessionRoute: ApiAuthSessionRoute,

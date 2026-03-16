@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTheme } from '@/lib/theming'
 import { BrandIcon } from '@/components/BrandIcon'
 
-export const Route = createFileRoute('/demo')({
+export const Route = createFileRoute('/demo/')({
   component: DemoPage,
 })
 
