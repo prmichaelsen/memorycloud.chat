@@ -160,7 +160,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       if (result.conversationId) {
         router.navigate({ to: `/chat/${result.conversationId}` })
       } else if (result.section === 'people' && user) {
-        const conversation = await createConversation({
+        const { conversation } = await createConversation({
           type: 'dm',
           participant_ids: [user.uid, result.objectID],
           created_by: user.uid,
@@ -235,7 +235,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search people, conversations, messages..."
-            className={`flex-1 bg-transparent outline-none text-sm ${t.textPrimary} placeholder:opacity-50`}
+            className={`flex-1 bg-transparent outline-none text-base ${t.textPrimary} placeholder:opacity-50`}
           />
           <kbd className={`text-xs px-1.5 py-0.5 rounded ${t.buttonSecondary} opacity-60`}>
             ESC

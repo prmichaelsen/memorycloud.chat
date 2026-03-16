@@ -13,20 +13,26 @@ import { createConversation } from '@/services/conversation.service'
 import { Modal } from '@/components/ui/Modal'
 import { Search, MessageSquare } from 'lucide-react'
 import { getAuthSession } from '@/lib/auth/server-fn'
-import { ConversationDatabaseService, resolveParticipantProfiles } from '@/services/conversation-database.service'
+import { ConversationDatabaseService } from '@/services/conversation-database.service'
+import { buildProfileMap } from '@/lib/profile-map'
 
 export const Route = createFileRoute('/chat')({
   component: ChatLayout,
+  shouldReload: false,
   beforeLoad: async () => {
     if (typeof window !== 'undefined') return { initialConversations: [], initialProfiles: {} }
     try {
       const user = await getAuthSession()
       if (!user) return { initialConversations: [], initialProfiles: {} }
       const result = await ConversationDatabaseService.listConversations({ user_id: user.uid })
+      console.log('[chat/beforeLoad] conversations', JSON.stringify({ count: result.conversations.length, sample: result.conversations.slice(0, 2).map(c => ({ id: c.id, type: c.type, name: c.name, participant_ids: c.participant_ids })) }))
       const allIds = [...new Set(result.conversations.flatMap((c) => c.participant_ids))]
-      const profiles = await resolveParticipantProfiles(allIds)
+      console.log('[chat/beforeLoad] resolving profiles for', allIds)
+      const profiles = await buildProfileMap(allIds)
+      console.log('[chat/beforeLoad] profiles', JSON.stringify(profiles))
       return { initialConversations: result.conversations, initialProfiles: profiles }
-    } catch {
+    } catch (err) {
+      console.error('[chat/beforeLoad] FAILED', err)
       return { initialConversations: [], initialProfiles: {} }
     }
   },
@@ -137,7 +143,7 @@ function ChatLayout() {
               value={dmSearchQuery}
               onChange={(e) => handleDmSearch(e.target.value)}
               placeholder="Search by name or email..."
-              className={`w-full pl-9 pr-3 py-2 rounded-lg text-sm ${t.input} ${t.inputFocus} outline-none`}
+              className={`w-full pl-9 pr-3 py-2 rounded-lg text-base ${t.input} ${t.inputFocus} outline-none`}
               autoFocus
             />
           </div>

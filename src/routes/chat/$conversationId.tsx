@@ -14,6 +14,7 @@ import { MemberList } from '@/components/chat/MemberList'
 import { SubHeaderTabs, type SubHeaderTab } from '@/components/SubHeaderTabs'
 import { GhostChatView } from '@/components/ghost/GhostChatView'
 import { getConversation, updateLastMessage } from '@/services/conversation.service'
+import type { ProfileSummary } from '@/lib/profile-map'
 import { listMessages, sendMessage, markConversationRead } from '@/services/message.service'
 import { checkPermission } from '@/services/group.service'
 import type { Conversation, Message, MessagePreview } from '@/types/conversations'
@@ -36,6 +37,7 @@ import { ConversationHeaderMenu } from '@/components/chat/ConversationHeaderMenu
 import { AddParticipantModal } from '@/components/chat/AddParticipantModal'
 import { getAuthSession } from '@/lib/auth/server-fn'
 import { ConversationDatabaseService } from '@/services/conversation-database.service'
+import { buildProfileMap } from '@/lib/profile-map'
 import { MessageDatabaseService } from '@/services/message-database.service'
 import { getTextContent } from '@/lib/message-content'
 
@@ -50,20 +52,23 @@ export const Route = createFileRoute('/chat/$conversationId')({
     tab: search.tab as string | undefined,
   }),
   beforeLoad: async ({ params }) => {
-    if (typeof window !== 'undefined') return { initialConversation: null, initialMessages: [] }
+    if (typeof window !== 'undefined') return { initialConversation: null, initialMessages: [], initialProfiles: {} }
     try {
       const user = await getAuthSession()
-      if (!user) return { initialConversation: null, initialMessages: [] }
-      const [conversation, msgResult] = await Promise.all([
-        ConversationDatabaseService.getConversation(params.conversationId),
-        MessageDatabaseService.listMessages(params.conversationId, 50),
-      ])
+      if (!user) return { initialConversation: null, initialMessages: [], initialProfiles: {} }
+      const conversation = await ConversationDatabaseService.getConversation(params.conversationId, user.uid)
+      const convType = conversation?.type === 'dm' || conversation?.type === 'group' ? conversation.type : undefined
+      const msgResult = await MessageDatabaseService.listMessages(params.conversationId, 50, undefined, user.uid, convType)
+      const profiles = conversation
+        ? await buildProfileMap(conversation.participant_user_ids ?? [])
+        : {}
       return {
         initialConversation: conversation,
         initialMessages: msgResult.messages ?? [],
+        initialProfiles: profiles,
       }
     } catch {
-      return { initialConversation: null, initialMessages: [] }
+      return { initialConversation: null, initialMessages: [], initialProfiles: {} }
     }
   },
 })
@@ -88,6 +93,7 @@ function ConversationView() {
 
   // State
   const [conversation, setConversation] = useState<Conversation | null>(null)
+  const [profiles, setProfiles] = useState<Record<string, ProfileSummary>>({})
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -126,14 +132,15 @@ function ConversationView() {
       streamingMessageIdRef.current = null
 
       try {
-        const [conv, msgResult] = await Promise.all([
+        const [envelope, msgResult] = await Promise.all([
           getConversation(conversationId),
           listMessages({ conversation_id: conversationId, limit: 50 }),
         ])
 
         if (cancelled) return
 
-        setConversation(conv)
+        setConversation(envelope?.conversation ?? null)
+        setProfiles(envelope?.profiles ?? {})
         // Messages come newest-first from service, reverse for display
         setMessages(msgResult.messages.reverse())
         setHasMore(msgResult.has_more)
@@ -142,7 +149,7 @@ function ConversationView() {
         markConversationRead(conversationId)
 
         // Load permissions for group conversations
-        if (conv?.type === 'group') {
+        if (envelope?.conversation?.type === 'group') {
           const [canManage, canKick] = await Promise.all([
             checkPermission(conversationId, user!.uid, 'can_manage_members'),
             checkPermission(conversationId, user!.uid, 'can_kick'),
@@ -431,9 +438,10 @@ function ConversationView() {
   }
 
   const conversationName =
-    conversation.name ??
+    (conversation.name && conversation.name !== 'Untitled' ? conversation.name : null) ??
     ((conversation.participant_ids ?? [])
       .filter((id) => id !== user?.uid)
+      .map((id) => profiles[id]?.display_name ?? id)
       .join(', ') || 'Conversation')
 
   const isGroup = conversation.type === 'group'

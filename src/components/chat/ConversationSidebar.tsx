@@ -11,20 +11,23 @@ import { useTheme } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
 import { listConversations } from '@/services/conversation.service'
 import type { Conversation } from '@/types/conversations'
+import type { ProfileSummary } from '@/lib/profile-map'
 
 interface ConversationSidebarProps {
   onNewDm: () => void
   onNewGroup: () => void
   initialConversations?: Conversation[]
+  initialProfiles?: Record<string, ProfileSummary>
 }
 
-export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations }: ConversationSidebarProps) {
+export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations, initialProfiles }: ConversationSidebarProps) {
   const t = useTheme()
   const { user } = useAuth()
   const params = useParams({ strict: false })
   const activeConversationId = (params as Record<string, string>).conversationId ?? null
 
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations ?? [])
+  const [profiles, setProfiles] = useState<Record<string, ProfileSummary>>(initialProfiles ?? {})
   const [loading, setLoading] = useState(!initialConversations || initialConversations.length === 0)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -40,6 +43,7 @@ export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations 
         const result = await listConversations({ user_id: user!.uid })
         if (!cancelled) {
           setConversations(result.conversations)
+          setProfiles(result.profiles ?? {})
         }
       } catch {
         // Error loading conversations
@@ -84,9 +88,10 @@ export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations 
   }
 
   function getConversationName(conv: Conversation): string {
-    if (conv.name) return conv.name
+    if (conv.name && conv.name !== 'Untitled') return conv.name
     const otherIds = conv.participant_ids.filter((id) => id !== user?.uid)
-    return otherIds.length > 0 ? otherIds.join(', ') : 'Chat'
+    if (otherIds.length === 0) return 'Chat'
+    return otherIds.map((id) => profiles[id]?.display_name ?? id).join(', ')
   }
 
   function getLastMessagePreview(conv: Conversation): string | null {

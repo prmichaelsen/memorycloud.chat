@@ -3,7 +3,8 @@
  * Follows library-services pattern: components call this, never fetch() directly.
  */
 
-import type { Conversation, ConversationType, MessagePreview } from '@/types/conversations'
+import type { Conversation, ConversationEnvelope, ConversationType, MessagePreview } from '@/types/conversations'
+import type { ProfileSummary } from '@/lib/profile-map'
 
 export interface CreateConversationParams {
   type: ConversationType
@@ -21,14 +22,16 @@ export interface ConversationListParams {
 
 export interface ConversationListResult {
   conversations: Conversation[]
+  profiles: Record<string, ProfileSummary>
 }
 
 /**
  * Create a new conversation (DM or group).
+ * Returns envelope with conversation + participant profiles.
  */
 export async function createConversation(
   params: CreateConversationParams
-): Promise<Conversation> {
+): Promise<ConversationEnvelope> {
   const res = await fetch('/api/conversations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -46,14 +49,15 @@ export async function listConversations(
 ): Promise<ConversationListResult> {
   const { type = 'all', limit = 50 } = params
   const res = await fetch(`/api/conversations?type=${type}&limit=${limit}`)
-  if (!res.ok) return { conversations: [] }
+  if (!res.ok) return { conversations: [], profiles: {} }
   return res.json()
 }
 
 /**
  * Get a single conversation by ID.
+ * Returns envelope with conversation + participant profiles.
  */
-export async function getConversation(conversationId: string): Promise<Conversation | null> {
+export async function getConversation(conversationId: string): Promise<ConversationEnvelope | null> {
   const res = await fetch(`/api/conversations/${conversationId}`)
   if (!res.ok) return null
   return res.json()

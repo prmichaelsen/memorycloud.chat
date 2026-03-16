@@ -19,6 +19,11 @@ export interface Conversation {
   is_discoverable: boolean // false for private groups
 }
 
+export interface ConversationEnvelope {
+  conversation: Conversation
+  profiles: Record<string, { user_id: string; display_name: string; username: string | null; profile_picture_path: string | null }>
+}
+
 export interface MessagePreview {
   content: string
   sender_user_id: string

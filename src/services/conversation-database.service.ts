@@ -74,7 +74,7 @@ export class ConversationDatabaseService {
     return {
       id: doc.id,
       type,
-      name: doc.name ?? doc.title ?? null,
+      name: (type === 'dm' ? null : (doc.name ?? doc.title ?? null)),
       description: doc.description ?? null,
       participant_ids: doc.participant_user_ids ?? [],
       created_by: doc.owner_user_id ?? '',
@@ -303,18 +303,29 @@ export class ConversationDatabaseService {
 
   /**
    * Update the last message preview on a conversation document.
+   * Uses type-based routing (matches agentbase.me — no extra Firestore lookups).
    */
   static async updateLastMessage(
     conversationId: string,
     preview: { content: string; sender_user_id: string; timestamp: string },
+    userId?: string,
+    conversationType?: ConversationType,
   ): Promise<void> {
     initFirebaseAdmin()
-    const path = getSharedConversations()
-    await updateDocument(path, conversationId, {
+    const update = {
       last_message_at: preview.timestamp,
       last_message_preview: preview.content,
       updated_at: new Date().toISOString(),
-    })
+    }
+
+    if (conversationType === 'dm' || conversationType === 'group') {
+      await updateDocument(getSharedConversations(), conversationId, update)
+    } else if (userId) {
+      await updateDocument(getUserConversations(userId), conversationId, update)
+    } else {
+      // Fallback: try shared
+      await updateDocument(getSharedConversations(), conversationId, update)
+    }
   }
 
   /**

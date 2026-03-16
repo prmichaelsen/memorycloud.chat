@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { initFirebaseAdmin } from '@/lib/firebase-admin'
 import { getServerSession } from '@/lib/auth/session'
 import { ConversationDatabaseService } from '@/services/conversation-database.service'
+import { buildProfileMap } from '@/lib/profile-map'
 import { syncConversationToAlgolia } from '@/lib/algolia-sync'
 import { createLogger } from '@/lib/logger'
 
@@ -63,7 +64,13 @@ export const Route = createFileRoute('/api/conversations/')({
           return Response.json({ error: 'Database error', detail: String(err) }, { status: 500 })
         }
 
-        return Response.json({ conversations })
+        console.log('[api/conversations] conversations loaded', JSON.stringify({ conversationCount: conversations.length, sample: conversations.slice(0, 2).map(c => ({ id: c.id, type: c.type, name: c.name, participant_ids: c.participant_ids })) }))
+        const allParticipantIds = [...new Set(conversations.flatMap((c) => c.participant_ids))]
+        console.log('[api/conversations] resolving profiles', JSON.stringify({ allParticipantIds, count: allParticipantIds.length }))
+        const profiles = await buildProfileMap(allParticipantIds)
+        console.log('[api/conversations] profiles resolved', JSON.stringify({ profileCount: Object.keys(profiles).length, profiles }))
+
+        return Response.json({ conversations, profiles })
       },
 
       POST: async ({ request }: { request: Request }) => {
@@ -105,7 +112,8 @@ export const Route = createFileRoute('/api/conversations/')({
           )
           if (existing) {
             log.debug({ conversationId: existing.id }, 'returning existing DM')
-            return Response.json(existing, { status: 200 })
+            const profiles = await buildProfileMap(existing.participant_user_ids ?? [])
+            return Response.json({ conversation: existing, profiles }, { status: 200 })
           }
         }
 
@@ -121,7 +129,8 @@ export const Route = createFileRoute('/api/conversations/')({
 
           await syncConversationToAlgolia(conversation)
 
-          return Response.json(conversation, { status: 201 })
+          const profiles = await buildProfileMap(conversation.participant_user_ids ?? [])
+          return Response.json({ conversation, profiles }, { status: 201 })
         } catch (err) {
           log.error({ err }, 'create failed')
           return Response.json({ error: 'Failed to create conversation', detail: String(err) }, { status: 500 })

@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { initFirebaseAdmin } from '@/lib/firebase-admin'
 import { getServerSession } from '@/lib/auth/session'
 import { ConversationDatabaseService } from '@/services/conversation-database.service'
+import { buildProfileMap } from '@/lib/profile-map'
 
 export const Route = createFileRoute('/api/conversations/$conversationId')({
   server: {
@@ -16,7 +17,8 @@ export const Route = createFileRoute('/api/conversations/$conversationId')({
           session.uid,
         )
         if (!conversation) return Response.json({ error: 'Not found' }, { status: 404 })
-        return Response.json(conversation)
+        const profiles = await buildProfileMap(conversation.participant_user_ids ?? [])
+        return Response.json({ conversation, profiles })
       },
       DELETE: async ({ request, params }: { request: Request; params: { conversationId: string } }) => {
         initFirebaseAdmin()
