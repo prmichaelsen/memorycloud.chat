@@ -32,6 +32,8 @@ import {
   assembleContent,
 } from '@/types/streaming'
 import { Users, Info, ChevronLeft, Wifi, WifiOff } from 'lucide-react'
+import { ConversationHeaderMenu } from '@/components/chat/ConversationHeaderMenu'
+import { AddParticipantModal } from '@/components/chat/AddParticipantModal'
 import { getAuthSession } from '@/lib/auth/server-fn'
 import { ConversationDatabaseService } from '@/services/conversation-database.service'
 import { MessageDatabaseService } from '@/services/message-database.service'
@@ -76,6 +78,7 @@ function ConversationView() {
     can_manage_members: boolean
     can_kick: boolean
   }>({ can_manage_members: false, can_kick: false })
+  const [showAddParticipant, setShowAddParticipant] = useState(false)
 
   // Streaming blocks state for real-time agent generation
   const [streamingBlocks, setStreamingBlocks] = useState<StreamingBlock[]>([])
@@ -494,6 +497,16 @@ function ConversationView() {
                 <Users className="w-5 h-5" />
               </button>
             )}
+
+            {/* Group header menu */}
+            <ConversationHeaderMenu
+              conversationId={conversationId}
+              isGroup={isGroup}
+              canManageMembers={currentUserPermissions.can_manage_members}
+              onAddParticipant={() => setShowAddParticipant(true)}
+              onManageMembers={() => setShowMembers(true)}
+              onShareLink={() => setShowAddParticipant(true)}
+            />
           </div>
         </div>
 
@@ -530,6 +543,13 @@ function ConversationView() {
           />
         </aside>
       )}
+
+      {/* Add participant modal */}
+      <AddParticipantModal
+        isOpen={showAddParticipant}
+        onClose={() => setShowAddParticipant(false)}
+        conversationId={conversationId}
+      />
     </div>
   )
 }
