@@ -6,7 +6,7 @@ import { useToast } from '@prmichaelsen/pretty-toasts/standalone'
 import { PRESET_THEMES, PRESET_THEME_NAMES } from '@/lib/theme-presets'
 import { getVariablesByGroup, THEME_VARIABLE_GROUPS, shortKeyToCssVar } from '@/lib/theme-variables'
 import { exportThemeYaml } from '@/lib/theme-yaml'
-import { saveThemeToApi, loadThemeFromApi, setThemeCookie } from '@/lib/theme-persistence'
+import { saveThemeToApi, loadThemeFromApi } from '@/lib/theme-persistence'
 import type { ThemeVariableGroup as ThemeVariableGroupType, CustomTheme, ThemePreferences } from '@/types/theme-editor'
 import { ThemePresetBar } from '@/components/settings/ThemePresetBar'
 import { ThemeVariableGroup } from '@/components/settings/ThemeVariableGroup'
@@ -98,7 +98,6 @@ function ThemeEditorPage() {
       }
 
       await saveThemeToApi(prefs)
-      setThemeCookie(editorValues)
       localStorage.setItem('remember_theme', themeId)
 
       setSavedThemes(updatedThemes)
@@ -116,13 +115,16 @@ function ThemeEditorPage() {
     if (!preset) return
     setEditorValues({ ...preset })
     setActivePreset(presetName)
-    // Infer base theme from preset name
-    if (presetName === 'light') {
-      setBaseTheme('light')
-    } else {
-      setBaseTheme('dark')
-    }
-  }, [])
+    setActiveSavedId(null)
+    const base = ['light', 'solarized-light', 'arctic-blue', 'rose-garden'].includes(presetName) ? 'light' as const : 'dark' as const
+    setBaseTheme(base)
+    setThemeName(presetName.charAt(0).toUpperCase() + presetName.slice(1).replace(/-/g, ' '))
+    // Auto-save preset selection
+    saveThemeToApi({
+      active_theme: presetName,
+      custom_themes: savedThemes,
+    }).catch(() => {})
+  }, [savedThemes])
 
   const handleVariableChange = useCallback((shortKey: string, value: string) => {
     setEditorValues((prev) => ({ ...prev, [shortKey]: value }))
@@ -155,6 +157,12 @@ function ThemeEditorPage() {
     setThemeName(theme.name)
     setBaseTheme(theme.base)
     setActivePreset(null)
+    setActiveSavedId(id)
+    // Auto-save loaded theme as active
+    saveThemeToApi({
+      active_theme: id,
+      custom_themes: savedThemes,
+    }).catch(() => {})
     setActiveSavedId(id)
   }, [savedThemes])
 
