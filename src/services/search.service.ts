@@ -8,6 +8,7 @@ import {
   USERS_INDEX,
   CONVERSATIONS_INDEX,
 } from '@/lib/algolia'
+import { ConversationDatabaseService } from '@/services/conversation-database.service'
 
 // --- Types ---
 
@@ -58,6 +59,14 @@ export async function search(
 ): Promise<MultiSearchResponse> {
   const client = getAlgoliaClient()
 
+  // Build searchable_by OR filter: user:userId OR group:groupId1 OR group:groupId2 ...
+  const groups = await ConversationDatabaseService.getUserGroups(userId)
+  const searchableByParts = [`searchable_by:"user:${userId}"`]
+  for (const g of groups) {
+    searchableByParts.push(`searchable_by:"group:${g.id}"`)
+  }
+  const messagesFilter = searchableByParts.join(' OR ')
+
   const results = await client.search({
     requests: [
       {
@@ -76,7 +85,7 @@ export async function search(
         indexName: MESSAGES_INDEX,
         query,
         hitsPerPage,
-        filters: `searchable_by:"user:${userId}"`,
+        filters: messagesFilter,
       },
     ],
   }) as { results: Array<{ hits: unknown[]; processingTimeMS?: number }> }
