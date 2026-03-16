@@ -128,6 +128,8 @@ export function ConversationList({ onNewDm, onNewGroup, initialConversations, in
     },
   ]
 
+  const syntheticIds = new Set(syntheticConversations.map((s) => s.id))
+
   function renderConversationItem(
     id: string,
     name: string,
@@ -242,7 +244,7 @@ export function ConversationList({ onNewDm, onNewGroup, initialConversations, in
                 </div>
               ),
             }}
-            data={conversations}
+            data={conversations.filter((c) => !syntheticIds.has(c.id))}
             computeItemKey={(_index, conv) => conv.id}
             itemContent={(_index, conv) => {
               const isActive = conv.id === activeConversationId
