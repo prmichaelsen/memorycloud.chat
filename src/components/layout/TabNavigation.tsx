@@ -36,7 +36,7 @@ export function TabNavigation({
 
   const isVertical = orientation === 'vertical'
   const containerClass = isVertical
-    ? 'flex flex-col gap-1'
+    ? 'flex flex-col gap-3'
     : 'flex items-center gap-1'
 
   return (
