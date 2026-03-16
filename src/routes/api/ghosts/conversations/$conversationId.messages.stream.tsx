@@ -59,7 +59,7 @@ export const Route = createFileRoute(
         }
 
         // Load conversation to verify it exists and get ghostId
-        const convPath = `agentbase.users/${session.uid}/ghost_conversations`
+        const convPath = `agentbase.users/${session.uid}/conversations`
         let conversationDoc: Record<string, unknown> | null
         try {
           conversationDoc = await getDocument(convPath, conversationId)
@@ -97,7 +97,7 @@ export const Route = createFileRoute(
         }
 
         // Load conversation history (last 50 messages)
-        const messagesPath = `agentbase.users/${session.uid}/ghost_conversations/${conversationId}/messages`
+        const messagesPath = `agentbase.users/${session.uid}/conversations/${conversationId}/messages`
         let history: GhostMessage[] = []
         try {
           const messageDocs = await queryDocuments(messagesPath, {
@@ -143,11 +143,13 @@ export const Route = createFileRoute(
           )
         }
 
-        // Build messages array for the chat engine
-        const chatMessages = history.map((msg) => ({
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-        }))
+        // Build messages array for the chat engine — filter out empty messages
+        const chatMessages = history
+          .filter((msg) => msg.content && (typeof msg.content !== 'string' || msg.content.trim()))
+          .map((msg) => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+          }))
         chatMessages.push({ role: 'user', content })
 
         // Create the AI provider, MCP provider, and chat engine

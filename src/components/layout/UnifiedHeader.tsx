@@ -6,7 +6,7 @@
  */
 
 import { Link } from '@tanstack/react-router'
-import { Menu, X, LogOut, User, Settings } from 'lucide-react'
+import { Menu, X, LogOut, User, Settings, ArrowLeft, EllipsisVertical } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useTheme, type ThemeName } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
@@ -19,8 +19,10 @@ export const HEADER_HEIGHT_CLASS = 'pt-14'
 export const HEADER_TOP_CLASS = 'top-14'
 
 interface UnifiedHeaderProps {
-  /** Current view title displayed in center */
+  /** Page title. When set, shows back button + title. When omitted, shows branding. */
   title?: string
+  /** Action buttons rendered in the header bar. */
+  headerActions?: React.ReactNode
   /** Callback to toggle sidebar on mobile */
   onToggleSidebar?: () => void
   /** Whether sidebar is currently open */
@@ -35,10 +37,13 @@ interface UnifiedHeaderProps {
   onMarkAllAsRead: () => Promise<void>
   onDeleteNotification: (id: string) => Promise<void>
   onNotificationClick?: (notification: Notification) => void
+  /** Callback for ellipsis menu button. When provided, renders a ⋮ button in the header. */
+  onEllipsisPress?: () => void
 }
 
 export function UnifiedHeader({
   title,
+  headerActions,
   onToggleSidebar,
   sidebarOpen = false,
   currentTheme,
@@ -49,6 +54,7 @@ export function UnifiedHeader({
   onMarkAllAsRead,
   onDeleteNotification,
   onNotificationClick,
+  onEllipsisPress,
 }: UnifiedHeaderProps) {
   const t = useTheme()
   const { user } = useAuth()
@@ -84,42 +90,54 @@ export function UnifiedHeader({
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="h-14 flex items-center justify-between px-4">
-        {/* Left: Hamburger (mobile) / Logo */}
-        <div className="flex items-center gap-3">
-          {/* Hamburger — visible on mobile/tablet, hidden on desktop */}
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className={`p-1.5 rounded-md ${t.buttonGhost} transition-colors lg:hidden`}
-            aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-          >
-            {sidebarOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </button>
-
-          {/* Logo */}
-          <Link
-            to="/"
-            className="text-lg font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent"
-          >
-            Memory Cloud
-          </Link>
+        {/* Left: back + title OR hamburger + branding */}
+        <div className="flex items-center gap-2 min-w-0 shrink">
+          {title ? (
+            <>
+              <button
+                type="button"
+                onClick={() => window.history.back()}
+                className={`p-1.5 rounded-lg ${t.buttonGhost} shrink-0`}
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className={`w-px h-5 ${t.borderSubtle} shrink-0`} />
+              <span className={`${t.textPrimary} font-medium truncate text-sm`}>{title}</span>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className={`p-1.5 rounded-md ${t.buttonGhost} transition-colors lg:hidden`}
+                aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+              >
+                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+              <Link
+                to="/"
+                className="text-lg font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent"
+              >
+                Memory Cloud
+              </Link>
+            </>
+          )}
         </div>
-
-        {/* Center: View title (shown on larger screens) */}
-        {title && (
-          <div className="hidden md:block absolute left-1/2 -translate-x-1/2">
-            <h1 className={`text-sm font-semibold ${t.textPrimary} truncate max-w-[300px]`}>
-              {title}
-            </h1>
-          </div>
-        )}
 
         {/* Right: Theme toggle + Notification bell + User avatar */}
         <div className="flex items-center gap-1">
+          {headerActions}
+          {onEllipsisPress && (
+            <button
+              type="button"
+              onClick={onEllipsisPress}
+              className={`p-1.5 rounded-lg ${t.buttonGhost} transition-colors`}
+              aria-label="More options"
+            >
+              <EllipsisVertical className="w-5 h-5" />
+            </button>
+          )}
           <ThemeToggle currentTheme={currentTheme} onToggle={onThemeToggle} />
 
           <NotificationBell

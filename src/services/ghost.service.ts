@@ -18,6 +18,8 @@ export interface GhostPersona {
 
 export interface GhostConversation {
   id: string
+  type: 'ghost'
+  ghost_owner_id: string
   ghostId: string
   ghostName: string
   userId: string

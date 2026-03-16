@@ -1,6 +1,9 @@
 /**
  * GhostDatabaseService — server-side Firestore CRUD for ghost persona conversations.
- * Collection path: users/{userId}/ghost_conversations
+ * Collection path: users/{userId}/conversations/ghost:{ghostId}
+ *
+ * Ghost conversations are stored in the shared conversations collection with
+ * deterministic IDs (`ghost:{ghostId}`) to align with agentbase.me.
  *
  * Integrates with remember-core SvcClient for memory-augmented ghost responses.
  */
@@ -9,9 +12,7 @@ import {
   getDocument,
   setDocument,
   queryDocuments,
-  addDocument,
 } from '@prmichaelsen/firebase-admin-sdk-v8'
-import type { QueryOptions } from '@prmichaelsen/firebase-admin-sdk-v8'
 import { initFirebaseAdmin } from '@/lib/firebase-admin'
 import { getRememberSvcClient } from '@/lib/remember-sdk'
 import type {
@@ -22,12 +23,16 @@ import type {
 
 const GHOSTS_COLLECTION = 'agentbase.ghosts'
 
-function ghostConversationsCollection(userId: string): string {
-  return `agentbase.users/${userId}/ghost_conversations`
+function conversationsCollection(userId: string): string {
+  return `agentbase.users/${userId}/conversations`
 }
 
-function ghostMessagesCollection(userId: string, conversationId: string): string {
-  return `agentbase.users/${userId}/ghost_conversations/${conversationId}/messages`
+function messagesCollection(userId: string, conversationId: string): string {
+  return `agentbase.users/${userId}/conversations/${conversationId}/messages`
+}
+
+function getGhostConversationId(ghostId: string): string {
+  return `ghost:${ghostId}`
 }
 
 export class GhostDatabaseService {
@@ -61,24 +66,20 @@ export class GhostDatabaseService {
     ghostId: string,
   ): Promise<GhostConversation> {
     initFirebaseAdmin()
-    const collection = ghostConversationsCollection(userId)
+    const collection = conversationsCollection(userId)
+    const conversationId = getGhostConversationId(ghostId)
 
-    // Check for existing conversation with this ghost
+    // Direct lookup by deterministic ID
     try {
-      const existing = await queryDocuments(collection, {
-        where: [{ field: 'ghostId', op: '==', value: ghostId }],
-        limit: 1,
-      })
-
-      if (existing.length > 0) {
-        const doc = existing[0]
+      const existing = await getDocument(collection, conversationId)
+      if (existing) {
         return {
-          ...(doc.data as unknown as GhostConversation),
-          id: doc.id,
+          ...(existing as unknown as GhostConversation),
+          id: conversationId,
         }
       }
     } catch (error) {
-      console.error('[GhostDatabaseService] query existing conversation failed:', error)
+      console.error('[GhostDatabaseService] get existing conversation failed:', error)
     }
 
     // Create new conversation
@@ -96,6 +97,8 @@ export class GhostDatabaseService {
     }
 
     const conversationData = {
+      type: 'ghost' as const,
+      ghost_owner_id: ghostId,
       ghostId,
       ghostName,
       userId,
@@ -104,8 +107,8 @@ export class GhostDatabaseService {
       updatedAt: now,
     }
 
-    const docRef = await addDocument(collection, conversationData)
-    return { id: docRef.id, ...conversationData }
+    await setDocument(collection, conversationId, conversationData)
+    return { id: conversationId, ...conversationData }
   }
 
   /**
@@ -119,7 +122,7 @@ export class GhostDatabaseService {
     message: { role: 'user' | 'assistant'; content: string },
   ): Promise<{ message: GhostMessage; memoryContext: unknown[] }> {
     initFirebaseAdmin()
-    const collection = ghostMessagesCollection(userId, conversationId)
+    const collection = messagesCollection(userId, conversationId)
     const now = new Date().toISOString()
     const id = crypto.randomUUID()
 
@@ -133,7 +136,7 @@ export class GhostDatabaseService {
     await setDocument(collection, id, ghostMessage)
 
     // Update conversation's updatedAt timestamp
-    const convCollection = ghostConversationsCollection(userId)
+    const convCollection = conversationsCollection(userId)
     await setDocument(
       convCollection,
       conversationId,
@@ -168,10 +171,11 @@ export class GhostDatabaseService {
    */
   static async listConversations(userId: string): Promise<GhostConversation[]> {
     initFirebaseAdmin()
-    const collection = ghostConversationsCollection(userId)
+    const collection = conversationsCollection(userId)
 
     try {
       const docs = await queryDocuments(collection, {
+        where: [{ field: 'type', op: '==', value: 'ghost' }],
         orderBy: [{ field: 'updatedAt', direction: 'DESCENDING' }],
         limit: 100,
       })

@@ -36,7 +36,7 @@ export function AppShell({ currentTheme, onThemeToggle }: AppShellProps) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
 
   // Header title/actions from child routes via context
-  const { title: currentTitle, headerActions } = useHeader()
+  const { title: currentTitle, headerActions, onEllipsisPress } = useHeader()
 
   // Notification system
   const {
@@ -116,6 +116,7 @@ export function AppShell({ currentTheme, onThemeToggle }: AppShellProps) {
         onMarkAllAsRead={markAllAsRead}
         onDeleteNotification={deleteNotification}
         onNotificationClick={handleNotificationClick}
+        onEllipsisPress={onEllipsisPress}
       />
 
       {/* Sidebar (desktop: always visible, mobile: slide-over) */}

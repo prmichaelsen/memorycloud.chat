@@ -451,7 +451,7 @@ function ConversationView() {
   const isGroup = conversation.type === 'group'
 
   // Set the UnifiedHeader title for mobile
-  const { setTitle, setHeaderActions } = useHeader()
+  const { setTitle, setHeaderActions, setOnEllipsisPress } = useHeader()
   useEffect(() => {
     setTitle(conversationName)
     return () => setTitle(undefined)
@@ -459,6 +459,12 @@ function ConversationView() {
   useEffect(() => {
     return () => setHeaderActions(undefined)
   }, [setHeaderActions])
+  useEffect(() => {
+    if (isGroup) {
+      setOnEllipsisPress(() => () => setShowMembers((prev) => !prev))
+    }
+    return () => setOnEllipsisPress(undefined)
+  }, [isGroup, setOnEllipsisPress])
 
   return (
     <div className="flex flex-1 h-full min-h-0">
