@@ -5,7 +5,7 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 import { useTheme } from '@/lib/theming'
-import { Brain } from 'lucide-react'
+import { BrandIcon } from '@/components/BrandIcon'
 import { MemoryFeed } from '@/components/memories/MemoryFeed'
 import { getAuthSession } from '@/lib/auth/server-fn'
 import { MemoryDatabaseService } from '@/services/memory-database.service'
@@ -42,7 +42,7 @@ function MemoriesPage() {
         <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center">
-              <Brain className="w-5 h-5 text-brand-primary" />
+              <BrandIcon size="w-5 h-5" />
             </div>
             <div>
               <h1 className={`text-xl font-bold ${t.textPrimary}`}>

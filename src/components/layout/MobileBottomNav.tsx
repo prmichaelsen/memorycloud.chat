@@ -1,11 +1,12 @@
 /**
  * MobileBottomNav — bottom navigation on mobile (< 768px).
- * Tab icons: MessageSquare, Brain, Ghost from lucide-react.
+ * Tab icons: MessageSquare, BrandIcon, Ghost.
  * Active indicator. Hides when virtual keyboard is open.
  */
 
 import { Link } from '@tanstack/react-router'
-import { MessageSquare, Brain } from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
+import { BrandIcon } from '@/components/BrandIcon'
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/lib/theming'
 
@@ -18,7 +19,7 @@ export interface MobileNavItem {
 
 export const DEFAULT_MOBILE_NAV_ITEMS: MobileNavItem[] = [
   { label: 'Chat', to: '/chat', icon: MessageSquare },
-  { label: 'Memories', to: '/memories', icon: Brain },
+  { label: 'Memories', to: '/memories', icon: BrandIcon },
 ]
 
 interface MobileBottomNavProps {

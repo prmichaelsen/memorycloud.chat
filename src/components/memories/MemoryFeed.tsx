@@ -6,7 +6,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import {
-  Brain,
   Sparkles,
   Clock,
   Compass,
@@ -20,6 +19,7 @@ import { MemoryCard } from './MemoryCard'
 import { ScopeFilter } from './ScopeFilter'
 import { MemorySearch } from './MemorySearch'
 import type { MemoryItem, MemoryFeedAlgorithm, MemoryScope } from '@/types/memories'
+import { BrandIcon } from '@/components/BrandIcon'
 
 const PAGE_SIZE = 20
 
@@ -202,7 +202,7 @@ export function MemoryFeed({ initialData }: MemoryFeedProps = {}) {
       {/* Empty state */}
       {!loading && !error && memories.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
-          <Brain className={`w-12 h-12 ${t.textMuted} mb-3`} />
+          <BrandIcon className={`w-12 h-12 ${t.textMuted}`} />
           <p className={`${t.textMuted} text-sm`}>
             {searchQuery
               ? 'No memories match your search'

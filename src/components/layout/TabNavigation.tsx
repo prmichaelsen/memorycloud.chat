@@ -5,7 +5,8 @@
  */
 
 import { Link } from '@tanstack/react-router'
-import { MessageSquare, Brain, Globe, Users } from 'lucide-react'
+import { MessageSquare, Globe, Users } from 'lucide-react'
+import { BrandIcon } from '@/components/BrandIcon'
 import { useTheme } from '@/lib/theming'
 
 export interface TabItem {
@@ -17,7 +18,7 @@ export interface TabItem {
 
 export const DEFAULT_TABS: TabItem[] = [
   { label: 'Chat', to: '/chat', icon: MessageSquare },
-  { label: 'Memories', to: '/memories', icon: Brain },
+  { label: 'Memories', to: '/memories', icon: BrandIcon },
   { label: 'The Void', to: '/void', icon: Globe },
   { label: 'Friends', to: '/friends', icon: Users },
 ]

@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react'
-import { Bookmark, BookmarkCheck } from 'lucide-react'
+import { BrandIcon } from '@/components/BrandIcon'
 import { useTheme } from '@/lib/theming'
 
 interface SaveMemoryButtonProps {
@@ -37,7 +37,7 @@ export function SaveMemoryButton({
         aria-label="Already saved as memory"
         disabled
       >
-        <BookmarkCheck className="w-4 h-4" />
+        <BrandIcon className="w-4 h-4" />
       </button>
     )
   }
@@ -53,9 +53,9 @@ export function SaveMemoryButton({
       aria-label="Save message as memory"
     >
       {isHovered ? (
-        <BookmarkCheck className="w-4 h-4" />
+        <BrandIcon className="w-4 h-4" />
       ) : (
-        <Bookmark className="w-4 h-4" />
+        <BrandIcon className="w-4 h-4" />
       )}
     </button>
   )

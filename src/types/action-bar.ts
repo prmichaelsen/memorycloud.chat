@@ -3,7 +3,7 @@ import type { ReactNode, RefObject } from 'react'
 
 export interface ActionBarItem {
   key: string
-  icon: LucideIcon
+  icon: LucideIcon | React.ComponentType<{ className?: string }>
   label: string
   onTrigger?: () => void
   renderContent?: (ctx: ActionBarContentContext) => ReactNode

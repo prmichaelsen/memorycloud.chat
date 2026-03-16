@@ -14,6 +14,15 @@ interface BrandIconProps {
   size?: string
 }
 
-export function BrandIcon({ className = 'bg-brand-primary', size = 'w-8 h-8' }: BrandIconProps) {
-  return <div className={`${size} ${className}`} style={maskStyle} />
+export function BrandIcon({ className, size }: BrandIconProps) {
+  const hasBg = className?.includes('bg-')
+  const hasSize = className?.includes('w-') || className?.includes('h-')
+  const bgClass = hasBg ? '' : 'bg-brand-primary'
+  const sizeClass = hasSize ? '' : (size ?? 'w-8 h-8')
+
+  return (
+    <div style={{transform: 'scale(1.5)'}}>
+      <div className={`inline-block shrink-0 ${bgClass} ${sizeClass} ${className ?? ''}`} style={maskStyle} />
+    </div>
+  )
 }

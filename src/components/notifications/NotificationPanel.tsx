@@ -5,7 +5,8 @@
  * Real-time updates via WebSocket sync badge count across tabs.
  */
 
-import { Bell, Check, MessageSquare, Brain, Ghost, AtSign, Trash2 } from 'lucide-react'
+import { Bell, Check, MessageSquare, Ghost, AtSign, Trash2 } from 'lucide-react'
+import { BrandIcon } from '@/components/BrandIcon'
 import { useTheme } from '@/lib/theming'
 import type { Notification, NotificationType } from '@/types/notifications'
 
@@ -29,7 +30,7 @@ function getNotificationIcon(type: NotificationType) {
     case 'mention':
       return <AtSign className="w-4 h-4 text-brand-warning" />
     case 'memory_saved':
-      return <Brain className="w-4 h-4 text-brand-success" />
+      return <BrandIcon className="w-4 h-4 bg-brand-success" />
     default:
       return <Bell className="w-4 h-4 text-text-secondary" />
   }
