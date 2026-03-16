@@ -19,12 +19,10 @@ import { listMessages, sendMessage, markConversationRead } from '@/services/mess
 import { checkPermission } from '@/services/group.service'
 import type { Conversation, Message, MessagePreview } from '@/types/conversations'
 import type {
-  NewMessageEvent,
   TypingEvent,
-  AgentResponseChunkEvent,
-  ToolCallStartEvent,
-  ToolCallCompleteEvent,
-  AgentResponseCompleteEvent,
+  ServerMessageEvent,
+  ServerChunkEvent,
+  ServerMessagesLoadedEvent,
 } from '@/types/websocket'
 import type { StreamingBlock } from '@/types/streaming'
 import {
@@ -174,43 +172,49 @@ function ConversationView() {
     }
   }, [conversationId, user])
 
+  // Send init message when WebSocket connects to load messages via ChatRoom DO
+  useEffect(() => {
+    if (wsStatus === 'connected' && user) {
+      wsSend({
+        type: 'init',
+        userId: user.uid,
+        conversationId,
+      } as any)
+    }
+  }, [wsStatus, user, conversationId])
+
   // Handle incoming WebSocket messages
   useEffect(() => {
     if (!wsMessage || !user) return
 
     switch (wsMessage.type) {
-      case 'message_new': {
-        const event = wsMessage as NewMessageEvent
-        if (event.conversation_id !== conversationId) return
+      case 'messages_loaded': {
+        const event = wsMessage as ServerMessagesLoadedEvent
+        setMessages(event.messages)
+        setHasMore(event.hasMore)
+        setLoading(false)
+        break
+      }
 
-        // Append new message to list
-        const newMsg: Message = {
-          id: event.message.id,
-          conversation_id: event.conversation_id,
-          role: event.message.role,
-          content: event.message.content,
-          timestamp: event.message.timestamp,
-          sender_user_id: event.message.sender_user_id,
-          visible_to_user_ids: event.message.visible_to_user_ids,
-        }
-
-        // Deduplicate — sender already added optimistically
+      case 'message': {
+        const event = wsMessage as ServerMessageEvent
+        // Deduplicate
         setMessages((prev) => {
-          if (prev.some((m) => m.id === newMsg.id)) return prev
-          return [...prev, newMsg]
+          if (prev.some((m) => m.id === event.message.id)) return prev
+          return [...prev, event.message]
         })
 
         // Update sidebar last_message preview
         updateLastMessage(conversationId, {
-          content: getTextContent(newMsg.content),
-          sender_user_id: newMsg.sender_user_id ?? '',
-          timestamp: newMsg.timestamp,
+          content: getTextContent(event.message.content),
+          sender_user_id: event.message.sender_user_id ?? '',
+          timestamp: event.message.timestamp,
         })
 
-        // Auto-mark as read if this is the active conversation
+        // Auto-mark as read
         markConversationRead(conversationId)
 
-        // Clear typing indicator for this sender
+        // Clear typing indicator for sender
         if (event.message.sender_user_id) {
           setTypingUsers((prev) =>
             prev.filter((tu) => tu.user_id !== event.message.sender_user_id)
@@ -219,17 +223,68 @@ function ConversationView() {
         break
       }
 
+      case 'chunk': {
+        const event = wsMessage as ServerChunkEvent
+        setStreamingBlocks((prev) => appendTextChunk(prev, event.content))
+        break
+      }
+
+      case 'tool_call': {
+        const event = wsMessage as any
+        if (event.toolCall) {
+          setStreamingBlocks((prev) =>
+            insertToolUseBlock(prev, event.toolCall.id, event.toolCall.name)
+          )
+        }
+        break
+      }
+
+      case 'tool_result': {
+        const event = wsMessage as any
+        if (event.toolResult) {
+          setStreamingBlocks((prev) =>
+            completeToolUseBlock(prev, event.toolResult.id, 'complete', JSON.stringify(event.toolResult.output))
+          )
+        }
+        break
+      }
+
+      case 'complete': {
+        setStreamingBlocks([])
+        streamingMessageIdRef.current = null
+        break
+      }
+
+      case 'cancelled': {
+        setStreamingBlocks([])
+        streamingMessageIdRef.current = null
+        break
+      }
+
+      case 'error': {
+        const event = wsMessage as any
+        console.error('[WebSocket] Error:', event.error)
+        setStreamingBlocks([])
+        streamingMessageIdRef.current = null
+        break
+      }
+
+      case 'debug': {
+        const event = wsMessage as any
+        console.log('[ChatRoom]', event.debug?.step, event.debug?.data ?? '')
+        break
+      }
+
       case 'typing_start': {
         const event = wsMessage as TypingEvent
         if (event.conversation_id !== conversationId) return
-        if (event.user_id === user.uid) return // Ignore own typing
+        if (event.user_id === user.uid) return
 
         setTypingUsers((prev) => {
           if (prev.some((tu) => tu.user_id === event.user_id)) return prev
           return [...prev, { user_id: event.user_id, user_name: event.user_name }]
         })
 
-        // Auto-clear typing after 3 seconds (in case typing_stop is missed)
         const existing = typingTimeoutsRef.current.get(event.user_id)
         if (existing) clearTimeout(existing)
 
@@ -257,76 +312,6 @@ function ConversationView() {
           clearTimeout(timeout)
           typingTimeoutsRef.current.delete(event.user_id)
         }
-        break
-      }
-
-      case 'agent_response_chunk': {
-        const event = wsMessage as AgentResponseChunkEvent
-        if (event.conversation_id !== conversationId) return
-
-        // Track which message we're streaming
-        if (streamingMessageIdRef.current !== event.message_id) {
-          streamingMessageIdRef.current = event.message_id
-          setStreamingBlocks([])
-        }
-
-        setStreamingBlocks((prev) => appendTextChunk(prev, event.chunk))
-        break
-      }
-
-      case 'tool_call_start': {
-        const event = wsMessage as ToolCallStartEvent
-        if (event.conversation_id !== conversationId) return
-
-        // Ensure we're tracking this message
-        if (streamingMessageIdRef.current !== event.message_id) {
-          streamingMessageIdRef.current = event.message_id
-          setStreamingBlocks([])
-        }
-
-        setStreamingBlocks((prev) =>
-          insertToolUseBlock(prev, event.tool_call_id, event.tool_name)
-        )
-        break
-      }
-
-      case 'tool_call_complete': {
-        const event = wsMessage as ToolCallCompleteEvent
-        if (event.conversation_id !== conversationId) return
-
-        setStreamingBlocks((prev) =>
-          completeToolUseBlock(prev, event.tool_call_id, event.status, event.result)
-        )
-        break
-      }
-
-      case 'agent_response_complete': {
-        const event = wsMessage as AgentResponseCompleteEvent
-        if (event.conversation_id !== conversationId) return
-
-        // Add the final assembled message to the messages array
-        const finalMsg: Message = {
-          id: event.message.id,
-          conversation_id: event.conversation_id,
-          role: 'assistant',
-          content: event.message.content,
-          timestamp: new Date().toISOString(),
-          sender_user_id: 'agent',
-          visible_to_user_ids: event.message.visible_to_user_ids,
-        }
-
-        setMessages((prev) => [...prev, finalMsg])
-
-        // Clear streaming state
-        setStreamingBlocks([])
-        streamingMessageIdRef.current = null
-
-        // Update sidebar preview
-        updateLastMessage(conversationId, {
-          content: getTextContent(finalMsg.content),
-          sender_user_id: finalMsg.sender_user_id ?? '',
-          timestamp: finalMsg.timestamp,
-        })
         break
       }
     }
@@ -364,31 +349,15 @@ function ConversationView() {
     }
   }, [conversationId, loadingMore, hasMore, messages])
 
-  // Send message handler
-  async function handleSend(content: string) {
+  // Send message handler — sends via WebSocket to ChatRoom DO
+  function handleSend(content: string) {
     if (!user) return
-
-    try {
-      const message = await sendMessage({
-        conversation_id: conversationId,
-        sender_user_id: user.uid,
-        content,
-      })
-
-      // Optimistic: add to local state immediately
-      setMessages((prev) => [...prev, message])
-
-      // Server POST already broadcasts via ChatRoom DO — no client wsSend needed
-
-      // Update conversation preview
-      updateLastMessage(conversationId, {
-        content: getTextContent(message.content),
-        sender_user_id: message.sender_user_id ?? '',
-        timestamp: message.timestamp,
-      })
-    } catch {
-      // Error sending message — in production, show toast and retry
-    }
+    wsSend({
+      type: 'message',
+      userId: user.uid,
+      conversationId,
+      message: content,
+    } as any)
   }
 
   // Typing indicator handlers
