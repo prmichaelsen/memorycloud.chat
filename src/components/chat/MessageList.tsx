@@ -14,8 +14,9 @@ import { useAuth } from '@/components/auth/AuthContext'
 import type { Message as MessageType } from '@/types/conversations'
 import type { StreamingBlock } from '@/types/streaming'
 import { Message } from '@/components/chat/Message'
+import { MarkdownContent } from '@/components/chat/MarkdownContent'
+import { ToolCallBadge } from '@/components/chat/ToolCallBadge'
 import { TypingIndicator } from '@/components/chat/TypingIndicator'
-import { StreamingBlocks } from '@/components/chat/StreamingBlocks'
 import { SaveMemoryButton } from '@/components/chat/SaveMemoryButton'
 import { MemoryService } from '@/services/memory.service'
 import { useActionToast } from '@/hooks/useActionToast'
@@ -227,8 +228,40 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
 
           if (item.type === 'streaming') {
             return (
-              <div className="px-4">
-                <StreamingBlocks blocks={item.blocks} />
+              <div className={`group px-4 py-3 ${t.messageAgent} hover:opacity-90 transition-colors`}>
+                {/* Header: agent avatar + name + timestamp */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="shrink-0">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${t.elevated}`}>
+                      <span className={`text-xs font-medium ${t.textSecondary}`}>A</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className={`text-sm font-medium ${t.textPrimary}`}>Agent</span>
+                    <span className={`text-xs ${t.textMuted}`}>
+                      {new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}
+                    </span>
+                  </div>
+                </div>
+                {/* Content: interleaved text + tool_use blocks */}
+                <div className="w-full break-words space-y-3">
+                  {item.blocks.map((block, bi) => {
+                    if (block.type === 'text') {
+                      return <MarkdownContent key={`text-${bi}`} content={block.text} />
+                    }
+                    if (block.type === 'tool_use') {
+                      return (
+                        <ToolCallBadge
+                          key={`tool-${block.id}`}
+                          toolName={block.name}
+                          status={block.status}
+                          timestamp={new Date()}
+                        />
+                      )
+                    }
+                    return null
+                  })}
+                </div>
               </div>
             )
           }
