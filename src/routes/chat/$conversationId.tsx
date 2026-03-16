@@ -10,14 +10,16 @@ import { useAuth } from '@/components/auth/AuthContext'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { MessageList } from '@/components/chat/MessageList'
 import { MessageCompose } from '@/components/chat/MessageCompose'
-import { MemberList } from '@/components/chat/MemberList'
+import { MemberManagement } from '@/components/chat/MemberManagement'
+import { SlideOverPanel } from '@/components/ui/SlideOverPanel'
 import { SubHeaderTabs, type SubHeaderTab } from '@/components/SubHeaderTabs'
 import { GhostChatView } from '@/components/ghost/GhostChatView'
 import { getConversation, updateLastMessage } from '@/services/conversation.service'
 import type { ProfileSummary } from '@/lib/profile-map'
 import { listMessages, sendMessage, markConversationRead } from '@/services/message.service'
 import { checkPermission } from '@/services/group.service'
-import type { Conversation, Message, MessagePreview } from '@/types/conversations'
+import type { Conversation, Message, GroupAuthLevel, GroupPermissions } from '@/types/conversations'
+import { MEMBER_PRESET } from '@/types/conversations'
 import type {
   TypingEvent,
   ServerMessageEvent,
@@ -100,10 +102,8 @@ function ConversationView() {
   const [typingUsers, setTypingUsers] = useState<
     Array<{ user_id: string; user_name: string }>
   >([])
-  const [currentUserPermissions, setCurrentUserPermissions] = useState<{
-    can_manage_members: boolean
-    can_kick: boolean
-  }>({ can_manage_members: false, can_kick: false })
+  const [currentUserPermissions, setCurrentUserPermissions] = useState<GroupPermissions>({ ...MEMBER_PRESET })
+  const [currentUserAuthLevel, setCurrentUserAuthLevel] = useState<GroupAuthLevel>(5)
   const [showAddParticipant, setShowAddParticipant] = useState(false)
 
   // Streaming blocks state for real-time agent generation
@@ -148,15 +148,26 @@ function ConversationView() {
 
         // Load permissions for group conversations
         if (envelope?.conversation?.type === 'group') {
-          const [canManage, canKick] = await Promise.all([
+          const [canManage, canKick, canBan, canModerate] = await Promise.all([
             checkPermission(conversationId, user!.uid, 'can_manage_members'),
             checkPermission(conversationId, user!.uid, 'can_kick'),
+            checkPermission(conversationId, user!.uid, 'can_ban'),
+            checkPermission(conversationId, user!.uid, 'can_moderate'),
           ])
           if (!cancelled) {
             setCurrentUserPermissions({
+              can_read: true,
+              can_publish: true,
               can_manage_members: canManage,
               can_kick: canKick,
+              can_ban: canBan,
+              can_moderate: canModerate,
             })
+            // Determine auth level from permissions
+            if (canBan) setCurrentUserAuthLevel(0)
+            else if (canKick) setCurrentUserAuthLevel(1)
+            else if (canModerate) setCurrentUserAuthLevel(3)
+            else setCurrentUserAuthLevel(5)
           }
         }
       } catch {
@@ -198,26 +209,41 @@ function ConversationView() {
 
       case 'message': {
         const event = wsMessage as ServerMessageEvent
-        // Deduplicate
+        const msg = event.message
+
+        // Parse JSON string content back to array (agentbase.me compat)
+        if (msg.content && typeof msg.content === 'string' &&
+            (msg.content.startsWith('[') || msg.content.startsWith('{'))) {
+          try {
+            msg.content = JSON.parse(msg.content)
+          } catch {
+            // Not valid JSON, keep as string
+          }
+        }
+
+        // Deduplicate and add to messages
         setMessages((prev) => {
-          if (prev.some((m) => m.id === event.message.id)) return prev
-          return [...prev, event.message]
+          if (prev.some((m) => m.id === msg.id)) return prev
+          return [...prev, msg]
         })
+
+        // Clear streaming blocks when a saved message arrives
+        setStreamingBlocks([])
 
         // Update sidebar last_message preview
         updateLastMessage(conversationId, {
-          content: getTextContent(event.message.content),
-          sender_user_id: event.message.sender_user_id ?? '',
-          timestamp: event.message.timestamp,
+          content: getTextContent(msg.content),
+          sender_user_id: msg.sender_user_id ?? '',
+          timestamp: msg.timestamp,
         })
 
         // Auto-mark as read
         markConversationRead(conversationId)
 
         // Clear typing indicator for sender
-        if (event.message.sender_user_id) {
+        if (msg.sender_user_id) {
           setTypingUsers((prev) =>
-            prev.filter((tu) => tu.user_id !== event.message.sender_user_id)
+            prev.filter((tu) => tu.user_id !== msg.sender_user_id)
           )
         }
         break
@@ -407,8 +433,8 @@ function ConversationView() {
   }
 
   const conversationName =
-    (conversation.name && conversation.name !== 'Untitled' ? conversation.name : null) ??
-    ((conversation.participant_ids ?? [])
+    (conversation.title && conversation.title !== 'Untitled' && conversation.title !== 'Untitled Conversation' ? conversation.title : null) ??
+    ((conversation.participant_user_ids ?? [])
       .filter((id) => id !== user?.uid)
       .map((id) => profiles[id]?.display_name ?? id)
       .join(', ') || 'Conversation')
@@ -437,11 +463,6 @@ function ConversationView() {
             <h1 className={`text-sm font-semibold truncate ${t.textPrimary}`}>
               {conversationName}
             </h1>
-            {isGroup && conversation.description && (
-              <p className={`text-xs truncate ${t.textMuted}`}>
-                {conversation.description}
-              </p>
-            )}
           </div>
 
           {/* Connection status */}
@@ -489,7 +510,7 @@ function ConversationView() {
               ghostOwnerId={
                 conversation?.type === 'group'
                   ? `group:${conversationId}`
-                  : (conversation?.participant_ids ?? []).find((id) => id !== user?.uid) ?? conversationId
+                  : (conversation?.participant_user_ids ?? []).find((id) => id !== user?.uid) ?? conversationId
               }
             />
           </div>
@@ -518,16 +539,17 @@ function ConversationView() {
         )}
       </div>
 
-      {/* Members panel (groups only) */}
-      {isGroup && showMembers && (
-        <aside
-          className={`w-64 shrink-0 overflow-y-auto ${t.sidebar} hidden lg:block`}
-        >
-          <MemberList
+      {/* Members slide-over panel (groups only) */}
+      {isGroup && (
+        <SlideOverPanel open={showMembers} onClose={() => setShowMembers(false)}>
+          <MemberManagement
             conversationId={conversationId}
             currentUserPermissions={currentUserPermissions}
+            currentUserAuthLevel={currentUserAuthLevel}
+            onAddParticipant={() => setShowAddParticipant(true)}
+            onClose={() => setShowMembers(false)}
           />
-        </aside>
+        </SlideOverPanel>
       )}
 
       {/* Add participant modal */}
