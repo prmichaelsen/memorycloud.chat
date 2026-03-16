@@ -1,6 +1,5 @@
 /**
- * MCP Tool Invocation Service — server-side MCP tool execution via API.
- * Streams responses back via WebSocket for real-time rendering.
+ * MCP Tool Discovery Service — lists available MCP tools for autocomplete.
  */
 
 export interface MCPTool {
@@ -10,28 +9,11 @@ export interface MCPTool {
   inputSchema: Record<string, unknown>
 }
 
-export interface MCPToolInvocationParams {
-  toolName: string
-  args: Record<string, unknown>
-  conversationId: string
-  /** User ID for ACL — agent responses scoped to sender */
-  userId: string
-}
-
-export interface MCPToolResult {
-  toolName: string
-  status: 'success' | 'error'
-  content: string
-  /** Raw structured output from the MCP server */
-  rawOutput?: unknown
-}
-
 /**
- * MCPService — discover available tools and invoke them.
+ * MCPService — discover available tools.
  *
- * Tool invocation is routed through the server API which connects to
- * configured MCP servers. Responses stream back via the existing
- * WebSocket connection (agent_response_chunk events).
+ * Tool invocation happens server-side via the chat engine / agent loop.
+ * This client service is only used for tool discovery (autocomplete, schema display).
  */
 export const MCPService = {
   /**
@@ -45,39 +27,6 @@ export const MCPService = {
     }
     const data = (await res.json()) as any
     return data.tools ?? []
-  },
-
-  /**
-   * Invoke an MCP tool. The response streams back via WebSocket,
-   * but this method returns the final result for inline display.
-   *
-   * The server-side handler:
-   * 1. Validates tool name against available tools
-   * 2. Connects to the appropriate MCP server (cached)
-   * 3. Executes the tool with provided args
-   * 4. Streams chunks via WebSocket (agent_response_chunk)
-   * 5. Returns final result
-   */
-  async invokeTool(params: MCPToolInvocationParams): Promise<MCPToolResult> {
-    const res = await fetch('/api/mcp/invoke', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tool_name: params.toolName,
-        args: params.args,
-        conversation_id: params.conversationId,
-        user_id: params.userId,
-      }),
-    })
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as any
-      return {
-        toolName: params.toolName,
-        status: 'error',
-        content: body.error ?? `Tool invocation failed (${res.status})`,
-      }
-    }
-    return res.json()
   },
 
   /**

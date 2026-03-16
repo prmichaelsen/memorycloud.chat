@@ -513,6 +513,7 @@ function ConversationView() {
         {/* Messages */}
         <MessageList
           messages={messages}
+          conversationId={conversationId}
           loading={loadingMore}
           hasMore={hasMore}
           onLoadMore={loadMore}

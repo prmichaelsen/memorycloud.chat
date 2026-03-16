@@ -77,3 +77,24 @@ export async function markConversationRead(
     throw new Error(`Failed to mark conversation as read (${res.status})`)
   }
 }
+
+/**
+ * Update a message's saved_memory_id after saving it as a memory.
+ */
+export async function updateMessageSavedMemory(
+  conversationId: string,
+  messageId: string,
+  savedMemoryId: string,
+): Promise<void> {
+  const res = await fetch(
+    `/api/conversations/${conversationId}/messages/${messageId}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ saved_memory_id: savedMemoryId }),
+    },
+  )
+  if (!res.ok) {
+    throw new Error(`Failed to update message (${res.status})`)
+  }
+}

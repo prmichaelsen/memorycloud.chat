@@ -12,11 +12,15 @@ import { isImageType, formatFileSize } from '@/services/upload.service'
 import { FileAttachment } from '@/components/chat/FileUpload'
 import { TypingIndicator } from '@/components/chat/TypingIndicator'
 import { StreamingBlocks } from '@/components/chat/StreamingBlocks'
+import { SaveMemoryButton } from '@/components/chat/SaveMemoryButton'
+import { SaveMemoryModal } from '@/components/chat/SaveMemoryModal'
+import { updateMessageSavedMemory } from '@/services/message.service'
 import { Modal } from '@/components/ui/Modal'
 import { Download, Maximize2 } from 'lucide-react'
 
 interface MessageListProps {
   messages: Message[]
+  conversationId: string
   loading?: boolean
   hasMore?: boolean
   onLoadMore?: () => void
@@ -26,6 +30,7 @@ interface MessageListProps {
 
 export function MessageList({
   messages,
+  conversationId,
   loading = false,
   hasMore = false,
   onLoadMore,
@@ -38,6 +43,19 @@ export function MessageList({
   const bottomRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
   const [expandedImage, setExpandedImage] = useState<string | null>(null)
+  const [savingMessage, setSavingMessage] = useState<Message | null>(null)
+  const [savedMemoryIds, setSavedMemoryIds] = useState<Map<string, string>>(new Map())
+
+  const handleMemorySaved = useCallback(async (memoryId: string) => {
+    if (!savingMessage) return
+    const messageId = savingMessage.id
+    setSavedMemoryIds((prev) => new Map(prev).set(messageId, memoryId))
+    try {
+      await updateMessageSavedMemory(conversationId, messageId, memoryId)
+    } catch (err) {
+      console.error('[MessageList] Failed to update message saved_memory_id:', err)
+    }
+  }, [savingMessage, conversationId])
 
   // Auto-scroll to bottom when new messages arrive or streaming blocks update
   useEffect(() => {
@@ -178,7 +196,7 @@ export function MessageList({
 
               {/* Message bubble */}
               <div
-                className={`flex gap-3 py-1.5 ${
+                className={`group flex gap-3 py-1.5 ${
                   isSelf ? 'flex-row-reverse' : 'flex-row'
                 }`}
               >
@@ -239,6 +257,18 @@ export function MessageList({
                     </p>
                   </div>
                 </div>
+
+                {/* Save as memory button (non-system messages only) */}
+                {message.role !== 'system' && (
+                  <div className="self-center shrink-0">
+                    <SaveMemoryButton
+                      messageId={message.id}
+                      messageContent={message.content}
+                      isSaved={!!message.saved_memory_id || savedMemoryIds.has(message.id)}
+                      onSave={() => setSavingMessage(message)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )
@@ -270,6 +300,15 @@ export function MessageList({
           />
         )}
       </Modal>
+
+      {/* Save as memory modal */}
+      <SaveMemoryModal
+        isOpen={savingMessage !== null}
+        onClose={() => setSavingMessage(null)}
+        messageContent={savingMessage?.content ?? ''}
+        sourceMessageId={savingMessage?.id ?? ''}
+        onSaved={handleMemorySaved}
+      />
     </>
   )
 }
