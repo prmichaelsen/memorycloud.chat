@@ -135,15 +135,6 @@ export const Message = memo(function Message({
           <span className={`text-sm font-medium ${isGhostMessage ? 'text-purple-300' : 'text-gray-200'}`}>
             {isGhostMessage ? 'Ghost' : displayName}
           </span>
-          {conversationType && (
-            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-              conversationType === 'dm' ? 'bg-brand-primary/20 text-brand-primary'
-              : conversationType === 'group' ? 'bg-brand-secondary/20 text-brand-secondary'
-              : 'bg-brand-accent/20 text-brand-accent'
-            }`}>
-              {conversationType === 'dm' ? 'dm' : conversationType === 'group' ? 'group' : 'agent'}
-            </span>
-          )}
           <span className="text-xs text-gray-400">
             {new Date(message.timestamp).toLocaleTimeString('en-US', {
               hour: 'numeric',

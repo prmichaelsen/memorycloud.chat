@@ -201,6 +201,13 @@ export function ConversationSidebar({ onNewDm, onNewGroup, initialConversations,
                       >
                         {name}
                       </span>
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 ${
+                        conv.type === 'dm' ? 'bg-brand-primary/20 text-brand-primary'
+                        : conv.type === 'group' ? 'bg-brand-secondary/20 text-brand-secondary'
+                        : 'bg-brand-accent/20 text-brand-accent'
+                      }`}>
+                        {conv.type === 'dm' ? 'dm' : conv.type === 'group' ? 'group' : 'agent'}
+                      </span>
                       {getLastMessageTimestamp(conv) && (
                         <span className={`text-xs shrink-0 ml-2 ${t.textMuted}`}>
                           {formatTimestamp(getLastMessageTimestamp(conv)!)}
