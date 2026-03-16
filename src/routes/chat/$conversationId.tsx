@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useTheme } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
 import { useWebSocket } from '@/hooks/useWebSocket'
@@ -12,8 +12,6 @@ import { MessageList } from '@/components/chat/MessageList'
 import { MessageCompose } from '@/components/chat/MessageCompose'
 import { MemberManagement } from '@/components/chat/MemberManagement'
 import { SlideOverPanel } from '@/components/ui/SlideOverPanel'
-import { SubHeaderTabs, type SubHeaderTab } from '@/components/SubHeaderTabs'
-import { GhostChatView } from '@/components/ghost/GhostChatView'
 import { getConversation, updateLastMessage } from '@/services/conversation.service'
 import type { ProfileSummary } from '@/lib/profile-map'
 import { listMessages, sendMessage, markConversationRead } from '@/services/message.service'
@@ -32,7 +30,7 @@ import {
   insertToolUseBlock,
   completeToolUseBlock,
 } from '@/types/streaming'
-import { Users, ChevronLeft, Ghost } from 'lucide-react'
+import { Users, ChevronLeft } from 'lucide-react'
 import { ConversationHeaderMenu } from '@/components/chat/ConversationHeaderMenu'
 import { AddParticipantModal } from '@/components/chat/AddParticipantModal'
 import { getAuthSession } from '@/lib/auth/server-fn'
@@ -42,11 +40,6 @@ import { MessageDatabaseService } from '@/services/message-database.service'
 import { getTextContent } from '@/lib/message-content'
 import { useHeader } from '@/contexts/HeaderContext'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-
-const CONVERSATION_TABS: SubHeaderTab[] = [
-  { id: 'chat', label: 'Chat' },
-  { id: 'ghost', label: 'Ghost', variant: 'ghost', icon: <Ghost className="w-4 h-4" /> },
-]
 
 function ConversationViewWrapper() {
   const { conversationId } = Route.useParams()
@@ -85,19 +78,6 @@ function ConversationView() {
   const t = useTheme()
   const { user } = useAuth()
   const { conversationId } = Route.useParams()
-  const { tab } = Route.useSearch()
-  const navigate = useNavigate()
-
-  const activeTab = tab || 'chat'
-
-  function handleTabChange(newTab: string) {
-    navigate({
-      to: '/chat/$conversationId',
-      params: { conversationId },
-      search: { tab: newTab },
-      replace: true,
-    })
-  }
 
   // SSR data from beforeLoad
   const { initialConversation, initialMessages, initialProfiles, initialHasMore } = Route.useRouteContext()
@@ -486,62 +466,39 @@ function ConversationView() {
               onShareLink={() => setShowAddParticipant(true)}
             />
 
-            {/* Tab switcher (inline on desktop) */}
-            <SubHeaderTabs
-              tabs={CONVERSATION_TABS}
-              activeId={activeTab}
-              onSelect={handleTabChange}
-            />
           </div>
         </div>
 
-        {activeTab === 'ghost' ? (
-          /* Ghost chat view */
-          <div className="flex-1 min-h-0">
-            <ErrorBoundary name="GhostChatView">
-              <GhostChatView
-                ghostOwnerId={
-                  conversation?.type === 'group'
-                    ? `group:${conversationId}`
-                    : (conversation?.participant_user_ids ?? []).find((id) => id !== user?.uid) ?? conversationId
-                }
-              />
-            </ErrorBoundary>
-          </div>
-        ) : (
-          <>
-            {/* Messages */}
-            <ErrorBoundary name="MessageList">
-              <MessageList
-                messages={messages}
-                conversationId={conversationId}
-                currentUserId={user?.uid}
-                canModerate={currentUserPermissions.can_moderate}
-                loading={loadingMore}
-                hasMore={hasMore}
-                onLoadMore={loadMore}
-                typingUsers={typingUsers}
-                streamingBlocks={streamingBlocks}
-                onReply={handleReply}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onTogglePin={handleTogglePin}
-                onReport={handleReport}
-              />
-            </ErrorBoundary>
+        {/* Messages */}
+        <ErrorBoundary name="MessageList">
+          <MessageList
+            messages={messages}
+            conversationId={conversationId}
+            currentUserId={user?.uid}
+            canModerate={currentUserPermissions.can_moderate}
+            loading={loadingMore}
+            hasMore={hasMore}
+            onLoadMore={loadMore}
+            typingUsers={typingUsers}
+            streamingBlocks={streamingBlocks}
+            onReply={handleReply}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onTogglePin={handleTogglePin}
+            onReport={handleReport}
+          />
+        </ErrorBoundary>
 
-            {/* Compose */}
-            <ErrorBoundary name="MessageCompose">
-              <MessageCompose
-                conversationId={conversationId}
-                senderId={user?.uid ?? ''}
-                onSend={handleSend}
-                onTypingStart={handleTypingStart}
-                onTypingStop={handleTypingStop}
-              />
-            </ErrorBoundary>
-          </>
-        )}
+        {/* Compose */}
+        <ErrorBoundary name="MessageCompose">
+          <MessageCompose
+            conversationId={conversationId}
+            senderId={user?.uid ?? ''}
+            onSend={handleSend}
+            onTypingStart={handleTypingStart}
+            onTypingStop={handleTypingStop}
+          />
+        </ErrorBoundary>
       </div>
 
       {/* Members slide-over panel (groups only) */}
