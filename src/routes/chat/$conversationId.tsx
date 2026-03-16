@@ -59,10 +59,10 @@ export const Route = createFileRoute('/chat/$conversationId')({
     tab: search.tab as string | undefined,
   }),
   beforeLoad: async ({ params }) => {
-    if (typeof window !== 'undefined') return { initialConversation: null, initialMessages: [], initialProfiles: {} }
+    if (typeof window !== 'undefined') return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false }
     try {
       const user = await getAuthSession()
-      if (!user) return { initialConversation: null, initialMessages: [], initialProfiles: {} }
+      if (!user) return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false }
       const conversation = await ConversationDatabaseService.getConversation(params.conversationId, user.uid)
       const convType = conversation?.type === 'dm' || conversation?.type === 'group' ? conversation.type : undefined
       const msgResult = await MessageDatabaseService.listMessages(params.conversationId, 50, undefined, user.uid, convType)
@@ -71,11 +71,12 @@ export const Route = createFileRoute('/chat/$conversationId')({
         : {}
       return {
         initialConversation: conversation,
-        initialMessages: msgResult.messages ?? [],
+        initialMessages: (msgResult.messages ?? []).reverse(),
+        initialHasMore: msgResult.has_more,
         initialProfiles: profiles,
       }
     } catch {
-      return { initialConversation: null, initialMessages: [], initialProfiles: {} }
+      return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false }
     }
   },
 })
@@ -99,7 +100,7 @@ function ConversationView() {
   }
 
   // SSR data from beforeLoad
-  const { initialConversation, initialMessages, initialProfiles } = Route.useRouteContext()
+  const { initialConversation, initialMessages, initialProfiles, initialHasMore } = Route.useRouteContext()
 
   // State
   const [conversation, setConversation] = useState<Conversation | null>(initialConversation ?? null)
@@ -107,7 +108,7 @@ function ConversationView() {
   const [messages, setMessages] = useState<Message[]>(initialMessages ?? [])
   const [loading, setLoading] = useState(!initialConversation)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(false)
+  const [hasMore, setHasMore] = useState(initialHasMore ?? false)
   const [showMembers, setShowMembers] = useState(false)
   const [typingUsers, setTypingUsers] = useState<
     Array<{ user_id: string; user_name: string }>
