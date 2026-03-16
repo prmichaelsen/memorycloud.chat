@@ -125,6 +125,17 @@ export function UnifiedHeader({
               <EllipsisVertical className="w-5 h-5" />
             </button>
           )}
+          {onSearchOpen && (
+            <button
+              type="button"
+              onClick={onSearchOpen}
+              className={`p-1.5 rounded-lg ${t.buttonGhost} transition-colors`}
+              aria-label="Search (Cmd+K)"
+              title="Search (Cmd+K)"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          )}
           <ThemeToggle currentTheme={currentTheme} onToggle={onThemeToggle} />
 
           <NotificationBell

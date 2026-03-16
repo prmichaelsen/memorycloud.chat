@@ -119,6 +119,7 @@ export function AppShell({ currentTheme, onThemeToggle }: AppShellProps) {
         onDeleteNotification={deleteNotification}
         onNotificationClick={handleNotificationClick}
         onEllipsisPress={onEllipsisPress}
+        onSearchOpen={() => setCommandPaletteOpen(true)}
       />
 
       {/* Sidebar (desktop: always visible, mobile: slide-over) */}
