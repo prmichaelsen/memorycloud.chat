@@ -398,6 +398,33 @@ function ConversationView() {
     console.log('[ActionBar] Report', messageId)
   }, [])
 
+  // Derive conversation name for header (safe even if conversation is null)
+  const conversationName = conversation
+    ? ((conversation.title && conversation.title !== 'Untitled' && conversation.title !== 'Untitled Conversation' ? conversation.title : null) ??
+      ((conversation.participant_user_ids ?? [])
+        .filter((id) => id !== user?.uid)
+        .map((id) => profiles[id]?.display_name ?? id)
+        .join(', ') || 'Conversation'))
+    : 'Conversation'
+
+  const isGroup = conversation?.type === 'group'
+
+  // Set the UnifiedHeader title for mobile (must be before any early returns)
+  const { setTitle, setHeaderActions, setOnEllipsisPress } = useHeader()
+  useEffect(() => {
+    setTitle(conversationName)
+    return () => setTitle(undefined)
+  }, [conversationName, setTitle])
+  useEffect(() => {
+    return () => setHeaderActions(undefined)
+  }, [setHeaderActions])
+  useEffect(() => {
+    if (isGroup) {
+      setOnEllipsisPress(() => () => setShowMembers((prev) => !prev))
+    }
+    return () => setOnEllipsisPress(undefined)
+  }, [isGroup, setOnEllipsisPress])
+
   // Loading state
   if (loading) {
     return (
@@ -422,31 +449,6 @@ function ConversationView() {
       </div>
     )
   }
-
-  const conversationName =
-    (conversation.title && conversation.title !== 'Untitled' && conversation.title !== 'Untitled Conversation' ? conversation.title : null) ??
-    ((conversation.participant_user_ids ?? [])
-      .filter((id) => id !== user?.uid)
-      .map((id) => profiles[id]?.display_name ?? id)
-      .join(', ') || 'Conversation')
-
-  const isGroup = conversation.type === 'group'
-
-  // Set the UnifiedHeader title for mobile
-  const { setTitle, setHeaderActions, setOnEllipsisPress } = useHeader()
-  useEffect(() => {
-    setTitle(conversationName)
-    return () => setTitle(undefined)
-  }, [conversationName, setTitle])
-  useEffect(() => {
-    return () => setHeaderActions(undefined)
-  }, [setHeaderActions])
-  useEffect(() => {
-    if (isGroup) {
-      setOnEllipsisPress(() => () => setShowMembers((prev) => !prev))
-    }
-    return () => setOnEllipsisPress(undefined)
-  }, [isGroup, setOnEllipsisPress])
 
   return (
     <div className="flex flex-1 h-full min-h-0">
