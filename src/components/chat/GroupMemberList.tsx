@@ -3,7 +3,7 @@
  * Respects ACL: only users with can_manage_members see invite, only can_kick see remove.
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Shield,
   ShieldCheck,
@@ -108,7 +108,8 @@ export function GroupMemberList({
     }
   }, [conversationId, onMemberCountChange])
 
-  // Stub: user search for invite
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const searchUsersForInvite = useCallback(
     async (query: string) => {
       if (query.length < 2) {
@@ -118,11 +119,11 @@ export function GroupMemberList({
 
       setInviteSearching(true)
       try {
-        // Stub: server function for user search
-        // const results = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
-        // Filter out existing members
-        // setInviteResults(results.filter(u => !members.some(m => m.user_id === u.uid)))
-        setInviteResults([])
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+        const data: { users: SearchUser[] } = await res.json()
+        setInviteResults(
+          data.users.filter((u: SearchUser) => !members.some(m => m.user_id === u.uid))
+        )
       } catch {
         // Search error
       } finally {
@@ -135,7 +136,14 @@ export function GroupMemberList({
   function handleInviteSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value
     setInviteQuery(query)
-    searchUsersForInvite(query)
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current)
+    if (query.length < 2) {
+      setInviteResults([])
+      return
+    }
+    searchTimeoutRef.current = setTimeout(() => {
+      searchUsersForInvite(query)
+    }, 300)
   }
 
   async function handleInviteUser(searchUser: SearchUser) {

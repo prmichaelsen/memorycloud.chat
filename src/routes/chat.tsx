@@ -3,7 +3,7 @@
  * All /chat/* routes render inside this layout.
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useTheme } from '@/lib/theming'
 import { ConversationSidebar } from '@/components/chat/ConversationSidebar'
@@ -44,24 +44,28 @@ function ChatLayout() {
   >([])
   const [dmSearching, setDmSearching] = useState(false)
 
+  const dmSearchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   async function handleDmSearch(query: string) {
     setDmSearchQuery(query)
+    if (dmSearchTimeoutRef.current) clearTimeout(dmSearchTimeoutRef.current)
     if (query.length < 2) {
       setDmSearchResults([])
       return
     }
 
-    setDmSearching(true)
-    try {
-      // Stub: search users by name/email
-      // const results = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
-      // setDmSearchResults(await results.json())
-      setDmSearchResults([])
-    } catch {
-      // Search error
-    } finally {
-      setDmSearching(false)
-    }
+    dmSearchTimeoutRef.current = setTimeout(async () => {
+      setDmSearching(true)
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`)
+        const data: { users: Array<{ uid: string; displayName: string; email: string; photoURL: string | null }> } = await res.json()
+        setDmSearchResults(data.users)
+      } catch {
+        // Search error
+      } finally {
+        setDmSearching(false)
+      }
+    }, 300)
   }
 
   async function handleStartDm(targetUserId: string) {
