@@ -5,7 +5,7 @@
  */
 
 import { Link } from '@tanstack/react-router'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Globe, Users } from 'lucide-react'
 import { BrandIcon } from '@/components/BrandIcon'
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/lib/theming'
@@ -20,6 +20,8 @@ export interface MobileNavItem {
 export const DEFAULT_MOBILE_NAV_ITEMS: MobileNavItem[] = [
   { label: 'Chat', to: '/chat', icon: MessageSquare },
   { label: 'Memories', to: '/memories', icon: BrandIcon },
+  { label: 'The Void', to: '/void', icon: Globe },
+  { label: 'Friends', to: '/friends', icon: Users },
 ]
 
 interface MobileBottomNavProps {

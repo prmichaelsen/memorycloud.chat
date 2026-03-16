@@ -99,7 +99,7 @@ export function UnifiedHeader({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className={`p-1.5 rounded-md ${t.buttonGhost} transition-colors lg:hidden`}
+            className={`p-1.5 rounded-md ${t.buttonGhost} transition-colors hidden md:block lg:hidden`}
             aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
           >
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
