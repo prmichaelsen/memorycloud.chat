@@ -108,7 +108,7 @@ milestones:
     status: not_started
     file: agent/milestones/milestone-13-custom-theme-editor.md
     tasks_total: 6
-    tasks_completed: 0
+    tasks_completed: 6
     estimated_weeks: 2
 
 tasks:

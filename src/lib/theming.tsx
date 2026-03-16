@@ -1,4 +1,5 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, type ReactNode } from 'react'
+import { shortKeyToCssVar } from '@/lib/theme-variables'
 
 /** Pre-composed class name strings for component roles */
 export interface Theme {
@@ -117,11 +118,33 @@ const ThemingContext = createContext<Theme>(darkTheme)
 
 export function ThemingProvider({
   theme = 'dark',
+  customVariables,
   children,
 }: {
   theme?: ThemeName
+  customVariables?: Record<string, string>
   children: ReactNode
 }) {
+  // Apply custom CSS variables to document root on mount and when they change
+  useEffect(() => {
+    if (typeof document === 'undefined' || !customVariables) return
+
+    const root = document.documentElement
+    const appliedKeys: string[] = []
+
+    for (const [shortKey, value] of Object.entries(customVariables)) {
+      const cssVar = shortKeyToCssVar(shortKey)
+      root.style.setProperty(cssVar, value)
+      appliedKeys.push(cssVar)
+    }
+
+    return () => {
+      for (const cssVar of appliedKeys) {
+        root.style.removeProperty(cssVar)
+      }
+    }
+  }, [customVariables])
+
   return (
     <ThemingContext.Provider value={themes[theme]}>
       <div data-theme={theme} className={themes[theme].page}>

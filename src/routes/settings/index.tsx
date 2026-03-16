@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState, useMemo, useEffect } from 'react'
 import { Search, User, Bell, Trash2, Shield, FileText, Sun, Moon, LogOut } from 'lucide-react'
 import { useTheme } from '@/lib/theming'
@@ -156,6 +156,10 @@ function SettingsPage() {
             <ThemeOption icon={Moon} label="Dark" value="dark" />
             <ThemeOption icon={Sun} label="Light" value="light" />
           </div>
+          <ActiveThemeDisplay />
+          <Link to="/settings/theme" className="text-sm text-brand-primary hover:text-brand-secondary mt-2 inline-block">
+            Customize Theme &rarr;
+          </Link>
         </section>
       )}
 
@@ -259,6 +263,25 @@ function ThemeOption({ icon: Icon, label, value }: { icon: React.ComponentType<{
         </span>
       </div>
     </button>
+  )
+}
+
+function ActiveThemeDisplay() {
+  const t = useTheme()
+  const stored = typeof window !== 'undefined' ? localStorage.getItem('remember_theme') : null
+  let activeThemeName = 'Dark'
+  if (stored === 'light') {
+    activeThemeName = 'Light'
+  } else if (stored === 'dark' || !stored) {
+    activeThemeName = 'Dark'
+  } else {
+    activeThemeName = stored
+  }
+
+  return (
+    <p className={`text-sm mt-3 ${t.textSecondary}`}>
+      Active: <span className={t.textPrimary}>{activeThemeName}</span>
+    </p>
   )
 }
 

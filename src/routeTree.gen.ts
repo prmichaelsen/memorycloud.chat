@@ -21,6 +21,7 @@ import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as DemoIndexRouteImport } from './routes/demo/index'
 import { Route as ConversationsIndexRouteImport } from './routes/conversations/index'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as SettingsThemeRouteImport } from './routes/settings/theme'
 import { Route as GroupLinksCodeRouteImport } from './routes/group-links/$code'
 import { Route as FriendLinksCodeRouteImport } from './routes/friend-links/$code'
 import { Route as DmLinksCodeRouteImport } from './routes/dm-links/$code'
@@ -42,6 +43,7 @@ import { Route as ApiConversationsIndexRouteImport } from './routes/api/conversa
 import { Route as ApiUsersSearchRouteImport } from './routes/api/users/search'
 import { Route as ApiSpacesFeedRouteImport } from './routes/api/spaces/feed'
 import { Route as ApiRelationshipsRelatedUserIdRouteImport } from './routes/api/relationships/$relatedUserId'
+import { Route as ApiPreferencesThemeRouteImport } from './routes/api/preferences/theme'
 import { Route as ApiNotificationsUnreadCountRouteImport } from './routes/api/notifications/unread-count'
 import { Route as ApiNotificationsReadAllRouteImport } from './routes/api/notifications/read-all'
 import { Route as ApiNotificationsIdRouteImport } from './routes/api/notifications/$id'
@@ -138,6 +140,11 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ChatRoute,
+} as any)
+const SettingsThemeRoute = SettingsThemeRouteImport.update({
+  id: '/theme',
+  path: '/theme',
+  getParentRoute: () => SettingsRoute,
 } as any)
 const GroupLinksCodeRoute = GroupLinksCodeRouteImport.update({
   id: '/group-links/$code',
@@ -246,6 +253,11 @@ const ApiRelationshipsRelatedUserIdRoute =
     path: '/api/relationships/$relatedUserId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPreferencesThemeRoute = ApiPreferencesThemeRouteImport.update({
+  id: '/api/preferences/theme',
+  path: '/api/preferences/theme',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNotificationsUnreadCountRoute =
   ApiNotificationsUnreadCountRouteImport.update({
     id: '/api/notifications/unread-count',
@@ -466,6 +478,7 @@ export interface FileRoutesByFullPath {
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
+  '/settings/theme': typeof SettingsThemeRoute
   '/chat/': typeof ChatIndexRoute
   '/conversations/': typeof ConversationsIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -483,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
+  '/api/preferences/theme': typeof ApiPreferencesThemeRoute
   '/api/relationships/$relatedUserId': typeof ApiRelationshipsRelatedUserIdRoute
   '/api/spaces/feed': typeof ApiSpacesFeedRoute
   '/api/users/search': typeof ApiUsersSearchRoute
@@ -534,6 +548,7 @@ export interface FileRoutesByTo {
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
+  '/settings/theme': typeof SettingsThemeRoute
   '/chat': typeof ChatIndexRoute
   '/conversations': typeof ConversationsIndexRoute
   '/demo': typeof DemoIndexRoute
@@ -551,6 +566,7 @@ export interface FileRoutesByTo {
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
+  '/api/preferences/theme': typeof ApiPreferencesThemeRoute
   '/api/relationships/$relatedUserId': typeof ApiRelationshipsRelatedUserIdRoute
   '/api/spaces/feed': typeof ApiSpacesFeedRoute
   '/api/users/search': typeof ApiUsersSearchRoute
@@ -605,6 +621,7 @@ export interface FileRoutesById {
   '/dm-links/$code': typeof DmLinksCodeRoute
   '/friend-links/$code': typeof FriendLinksCodeRoute
   '/group-links/$code': typeof GroupLinksCodeRoute
+  '/settings/theme': typeof SettingsThemeRoute
   '/chat/': typeof ChatIndexRoute
   '/conversations/': typeof ConversationsIndexRoute
   '/demo/': typeof DemoIndexRoute
@@ -622,6 +639,7 @@ export interface FileRoutesById {
   '/api/notifications/$id': typeof ApiNotificationsIdRouteWithChildren
   '/api/notifications/read-all': typeof ApiNotificationsReadAllRoute
   '/api/notifications/unread-count': typeof ApiNotificationsUnreadCountRoute
+  '/api/preferences/theme': typeof ApiPreferencesThemeRoute
   '/api/relationships/$relatedUserId': typeof ApiRelationshipsRelatedUserIdRoute
   '/api/spaces/feed': typeof ApiSpacesFeedRoute
   '/api/users/search': typeof ApiUsersSearchRoute
@@ -678,6 +696,7 @@ export interface FileRouteTypes {
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
+    | '/settings/theme'
     | '/chat/'
     | '/conversations/'
     | '/demo/'
@@ -695,6 +714,7 @@ export interface FileRouteTypes {
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
+    | '/api/preferences/theme'
     | '/api/relationships/$relatedUserId'
     | '/api/spaces/feed'
     | '/api/users/search'
@@ -746,6 +766,7 @@ export interface FileRouteTypes {
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
+    | '/settings/theme'
     | '/chat'
     | '/conversations'
     | '/demo'
@@ -763,6 +784,7 @@ export interface FileRouteTypes {
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
+    | '/api/preferences/theme'
     | '/api/relationships/$relatedUserId'
     | '/api/spaces/feed'
     | '/api/users/search'
@@ -816,6 +838,7 @@ export interface FileRouteTypes {
     | '/dm-links/$code'
     | '/friend-links/$code'
     | '/group-links/$code'
+    | '/settings/theme'
     | '/chat/'
     | '/conversations/'
     | '/demo/'
@@ -833,6 +856,7 @@ export interface FileRouteTypes {
     | '/api/notifications/$id'
     | '/api/notifications/read-all'
     | '/api/notifications/unread-count'
+    | '/api/preferences/theme'
     | '/api/relationships/$relatedUserId'
     | '/api/spaces/feed'
     | '/api/users/search'
@@ -900,6 +924,7 @@ export interface RootRouteChildren {
   ApiNotificationsIdRoute: typeof ApiNotificationsIdRouteWithChildren
   ApiNotificationsReadAllRoute: typeof ApiNotificationsReadAllRoute
   ApiNotificationsUnreadCountRoute: typeof ApiNotificationsUnreadCountRoute
+  ApiPreferencesThemeRoute: typeof ApiPreferencesThemeRoute
   ApiRelationshipsRelatedUserIdRoute: typeof ApiRelationshipsRelatedUserIdRoute
   ApiSpacesFeedRoute: typeof ApiSpacesFeedRoute
   ApiUsersSearchRoute: typeof ApiUsersSearchRoute
@@ -1005,6 +1030,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/chat/'
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof ChatRoute
+    }
+    '/settings/theme': {
+      id: '/settings/theme'
+      path: '/theme'
+      fullPath: '/settings/theme'
+      preLoaderRoute: typeof SettingsThemeRouteImport
+      parentRoute: typeof SettingsRoute
     }
     '/group-links/$code': {
       id: '/group-links/$code'
@@ -1151,6 +1183,13 @@ declare module '@tanstack/react-router' {
       path: '/api/relationships/$relatedUserId'
       fullPath: '/api/relationships/$relatedUserId'
       preLoaderRoute: typeof ApiRelationshipsRelatedUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/preferences/theme': {
+      id: '/api/preferences/theme'
+      path: '/api/preferences/theme'
+      fullPath: '/api/preferences/theme'
+      preLoaderRoute: typeof ApiPreferencesThemeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/notifications/unread-count': {
@@ -1435,10 +1474,12 @@ const ConversationsRouteWithChildren = ConversationsRoute._addFileChildren(
 )
 
 interface SettingsRouteChildren {
+  SettingsThemeRoute: typeof SettingsThemeRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsThemeRoute: SettingsThemeRoute,
   SettingsIndexRoute: SettingsIndexRoute,
 }
 
@@ -1602,6 +1643,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNotificationsIdRoute: ApiNotificationsIdRouteWithChildren,
   ApiNotificationsReadAllRoute: ApiNotificationsReadAllRoute,
   ApiNotificationsUnreadCountRoute: ApiNotificationsUnreadCountRoute,
+  ApiPreferencesThemeRoute: ApiPreferencesThemeRoute,
   ApiRelationshipsRelatedUserIdRoute: ApiRelationshipsRelatedUserIdRoute,
   ApiSpacesFeedRoute: ApiSpacesFeedRoute,
   ApiUsersSearchRoute: ApiUsersSearchRoute,

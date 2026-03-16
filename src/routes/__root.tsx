@@ -17,7 +17,8 @@ import { ToastProvider, StandaloneToastContainer } from '@prmichaelsen/pretty-to
 import { AppShell } from '@/components/layout/AppShell'
 import { HeaderProvider } from '@/contexts/HeaderContext'
 import { getStoredTheme } from '@/components/layout/ThemeToggle'
-import { getAuthSession } from '@/lib/auth/server-fn'
+import { getAuthSession, getThemeOverrides } from '@/lib/auth/server-fn'
+import { shortKeyToCssVar } from '@/lib/theme-variables'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -26,10 +27,13 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
   beforeLoad: async () => {
     try {
-      const initialUser = await getAuthSession()
-      return { initialUser }
+      const [initialUser, themeOverrides] = await Promise.all([
+        getAuthSession(),
+        getThemeOverrides(),
+      ])
+      return { initialUser, themeOverrides }
     } catch {
-      return { initialUser: null }
+      return { initialUser: null, themeOverrides: null as Record<string, string> | null }
     }
   },
   head: () => ({
@@ -53,8 +57,20 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { themeOverrides } = Route.useRouteContext()
+
+  // Build inline style object from theme overrides for SSR no-flash
+  const themeStyle = themeOverrides
+    ? Object.fromEntries(
+        Object.entries(themeOverrides).map(([shortKey, value]) => [
+          shortKeyToCssVar(shortKey),
+          value,
+        ]),
+      )
+    : undefined
+
   return (
-    <html lang="en">
+    <html lang="en" style={themeStyle as React.CSSProperties | undefined}>
       <head>
         <HeadContent />
       </head>
@@ -79,11 +95,11 @@ function NotFound() {
 
 function RootLayout() {
   const [theme, setTheme] = useState<ThemeName>(() => getStoredTheme())
-  const { initialUser } = Route.useRouteContext()
+  const { initialUser, themeOverrides } = Route.useRouteContext()
 
   return (
     <AuthProvider initialUser={initialUser}>
-      <ThemingProvider theme={theme}>
+      <ThemingProvider theme={theme} customVariables={themeOverrides ?? undefined}>
         <ToastProvider>
           <HeaderProvider>
             <AppShell currentTheme={theme} onThemeToggle={setTheme} />
