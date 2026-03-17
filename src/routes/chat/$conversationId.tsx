@@ -256,7 +256,19 @@ function ConversationView() {
 
       case 'error': {
         const event = wsMessage as any
-        console.error('[WebSocket] Error:', event.error)
+
+        // Handle anonymous message limit error specially
+        if (event.error === 'limit_reached') {
+          // Force UI to show SignupCta by clearing messages state
+          // This ensures client count re-syncs with server
+          setMessages([])
+
+          // Optionally, show a toast notification
+          console.warn('[WebSocket] Anonymous message limit reached')
+        } else {
+          console.error('[WebSocket] Error:', event.error)
+        }
+
         setStreamingBlocks([])
         streamingMessageIdRef.current = null
         break
