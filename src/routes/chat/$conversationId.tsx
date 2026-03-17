@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useTheme } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
+import { SignupCta } from '@/components/auth/SignupCta'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { MessageList } from '@/components/chat/MessageList'
 import { MessageCompose } from '@/components/chat/MessageCompose'
@@ -519,13 +520,18 @@ function ConversationView() {
 
         {/* Compose */}
         <ErrorBoundary name="MessageCompose">
-          <MessageCompose
-            conversationId={conversationId}
-            senderId={user?.uid ?? ''}
-            onSend={handleSend}
-            onTypingStart={handleTypingStart}
-            onTypingStop={handleTypingStop}
-          />
+          {/* Anonymous users: show sign-up prompt after 10 messages */}
+          {anonLimitReached ? (
+            <SignupCta message="You've sent 10 messages! Sign up to continue the conversation." />
+          ) : (
+            <MessageCompose
+              conversationId={conversationId}
+              senderId={user?.uid ?? ''}
+              onSend={handleSend}
+              onTypingStart={handleTypingStart}
+              onTypingStop={handleTypingStop}
+            />
+          )}
         </ErrorBoundary>
       </div>
 
