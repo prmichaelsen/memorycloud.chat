@@ -44,6 +44,7 @@ export class ChatRoom extends DurableObject {
   private activeControllers: Map<string, AbortController> = new Map()
   private mcpProvider: MCPProvider
   private request?: Request
+  private anonCache: Map<string, boolean> = new Map()
 
   constructor(state: DurableObjectState, env: Env) {
     super(state, env)
@@ -484,17 +485,28 @@ export class ChatRoom extends DurableObject {
   }
 
   /**
-   * Check if user is anonymous via Firebase Auth
-   * Returns true if user has isAnonymous flag set
+   * Check if user is anonymous based on their Firestore profile
+   * Returns true if user has isAnonymous flag set, false otherwise
+   * Defaults to false (safer) if profile can't be fetched
+   * Uses caching to reduce Firestore reads
    */
   private async checkIfAnonymous(userId: string): Promise<boolean> {
+    // Check cache first
+    if (this.anonCache.has(userId)) {
+      return this.anonCache.get(userId)!
+    }
+
+    // Query Firestore profile document
     try {
-      const admin = await import('firebase-admin')
-      const auth = admin.auth()
-      const user = await auth.getUser(userId)
-      return user.providerData.length === 0
+      const userDoc = await getDocument(`agentbase.users/${userId}`, 'profile')
+      const isAnon = userDoc?.isAnonymous === true
+
+      // Cache result
+      this.anonCache.set(userId, isAnon)
+
+      return isAnon
     } catch (err) {
-      log.error({ userId, err }, 'Failed to check if user is anonymous')
+      log.error({ userId, err }, 'Failed to check isAnonymous flag')
       // Default to non-anonymous on error (safer — don't block authenticated users)
       return false
     }
