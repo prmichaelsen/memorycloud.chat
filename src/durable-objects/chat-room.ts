@@ -17,10 +17,12 @@ import { ConversationDatabaseService } from '@/services/conversation-database.se
 import { detectAgentMention, shouldAgentRespond } from '@/lib/chat/agent-mention'
 import { getTextContent } from '@/lib/message-content'
 import { createLogger } from '@/lib/logger'
+import { getDocument, setDocument } from '@prmichaelsen/firebase-admin-sdk-v8'
 import type { Message, MessageContent } from '@/types/conversations'
 import type { StreamEvent } from '@/lib/chat/types'
 
 const log = createLogger('ChatRoom')
+const ANON_MESSAGE_LIMIT = 10
 
 interface ClientMessage {
   type: 'message' | 'load_messages' | 'init' | 'cancel'
@@ -434,6 +436,67 @@ export class ChatRoom extends DurableObject {
   private broadcastToAll(message: ServerMessage): void {
     for (const [socket] of this.sessions.entries()) {
       this.sendMsg(socket, message)
+    }
+  }
+
+  /**
+   * Get user stats document from Firestore
+   * Path: agentbase.users/{uid}/stats/message_count
+   */
+  private async getUserStats(userId: string): Promise<{ count: number } | null> {
+    try {
+      const statsDoc = await getDocument(`agentbase.users/${userId}/stats`, 'message_count')
+      if (!statsDoc) {
+        return null
+      }
+      return { count: statsDoc.count ?? 0 }
+    } catch (err) {
+      log.error({ userId, err }, 'Failed to fetch user stats')
+      return null
+    }
+  }
+
+  /**
+   * Increment message count for anonymous users
+   * Uses atomic Firestore increment to prevent race conditions
+   */
+  private async incrementMessageCount(userId: string): Promise<void> {
+    try {
+      const collectionPath = `agentbase.users/${userId}/stats`
+
+      // Use atomic increment via FieldValue.increment()
+      // If document doesn't exist, Firestore creates it with count = 1
+      await setDocument(
+        collectionPath,
+        'message_count',
+        {
+          count: { _increment: 1 },
+          updated_at: new Date().toISOString(),
+        },
+        { merge: true }
+      )
+
+      log.debug({ userId }, 'Message count incremented')
+    } catch (err) {
+      log.error({ userId, err }, 'Failed to increment message count')
+      throw err
+    }
+  }
+
+  /**
+   * Check if user is anonymous via Firebase Auth
+   * Returns true if user has isAnonymous flag set
+   */
+  private async checkIfAnonymous(userId: string): Promise<boolean> {
+    try {
+      const admin = await import('firebase-admin')
+      const auth = admin.auth()
+      const user = await auth.getUser(userId)
+      return user.providerData.length === 0
+    } catch (err) {
+      log.error({ userId, err }, 'Failed to check if user is anonymous')
+      // Default to non-anonymous on error (safer — don't block authenticated users)
+      return false
     }
   }
 }
