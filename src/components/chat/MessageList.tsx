@@ -21,6 +21,7 @@ import { SaveMemoryButton } from '@/components/chat/SaveMemoryButton'
 import { MemoryService } from '@/services/memory.service'
 import { useActionToast } from '@/hooks/useActionToast'
 import { getTextContent } from '@/lib/message-content'
+import { MessageCircle } from 'lucide-react'
 
 interface MessageListProps {
   messages: MessageType[]
@@ -218,6 +219,17 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
           Footer: () => (
             <div style={{ paddingBottom: inputHeight > 0 ? `${inputHeight + 16}px` : '0' }} />
           ),
+          EmptyPlaceholder: () =>
+            conversationId === 'main' ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center gap-4 text-center px-6">
+                  <MessageCircle className={`w-16 h-16 ${t.textMuted}`} strokeWidth={1.5} />
+                  <p className={`text-base ${t.textSecondary}`}>
+                    Try asking me <span className={`font-medium ${t.textPrimary}`}>"What can you do?"</span> to get started!
+                  </p>
+                </div>
+              </div>
+            ) : null,
         }}
         itemContent={(_index, item) => {
           if (item.type === 'typing') {
