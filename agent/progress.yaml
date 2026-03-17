@@ -119,6 +119,14 @@ milestones:
     tasks_completed: 0
     estimated_weeks: 2-3
 
+  - id: milestone_15
+    name: Ghost Space Integration
+    status: not_started
+    file: agent/milestones/milestone-15-ghost-space-integration.md
+    tasks_total: 5
+    tasks_completed: 0
+    estimated_weeks: 1
+
 tasks:
   milestone_1:
     - id: task-2
@@ -612,11 +620,53 @@ tasks:
       actual_hours: null
       completed_date: null
 
+  milestone_15:
+    - id: task-60
+      name: Update useWebSocket Hook
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-15-ghost-space-integration/task-60-usewebsocket-ghostowner.md
+      estimated_hours: 1-2
+      actual_hours: null
+      completed_date: null
+    - id: task-61
+      name: Update ChatRoom DO ClientMessage Interface
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-15-ghost-space-integration/task-61-chatroom-clientmessage.md
+      estimated_hours: 0.5-1
+      actual_hours: null
+      completed_date: null
+    - id: task-62
+      name: Update ChatRoom DO to Forward ghostOwner
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-15-ghost-space-integration/task-62-chatroom-forward-ghostowner.md
+      estimated_hours: 1-2
+      actual_hours: null
+      completed_date: null
+    - id: task-63
+      name: Update Chat Route Ghost Detection
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-15-ghost-space-integration/task-63-chat-route-detection.md
+      estimated_hours: 1
+      actual_hours: null
+      completed_date: null
+    - id: task-64
+      name: Integration Testing
+      status: not_started
+      started: null
+      file: agent/tasks/milestone-15-ghost-space-integration/task-64-integration-testing.md
+      estimated_hours: 1-2
+      actual_hours: null
+      completed_date: null
+
 documentation:
   design_documents: 4
-  milestone_documents: 14
+  milestone_documents: 15
   pattern_documents: 44
-  task_documents: 59
+  task_documents: 64
 
 progress:
   planning: 100
@@ -648,7 +698,8 @@ recent_work:
 next_steps:
   - "M12: Complete remaining task (Task 38: SVG migration)"
   - "M13: Custom Theme Editor — all tasks ready to start"
-  - "M14: Anonymous Message Limit — two-phase implementation (client-side gating → server enforcement)"
+  - "M14: Anonymous Message Limit — Phase 2 tasks (55-59) in progress"
+  - "M15: Ghost Space Integration — enable Ghost of the Void to query space memories (5 tasks)"
   - Fix SSR build failure (TanStack Start manifest plugin error)
   - Deploy to Cloudflare Workers
 
