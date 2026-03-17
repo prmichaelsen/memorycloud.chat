@@ -223,6 +223,15 @@ export class ChatRoom extends DurableObject {
       conversationType === 'chat' ? undefined : conversationType,
     )
 
+    // === INCREMENT MESSAGE COUNT FOR ANONYMOUS USERS ===
+    if (isAnonymous && savedMessage) {
+      // Fire-and-forget increment (don't await to avoid blocking)
+      this.incrementMessageCount(userId).catch((err) => {
+        log.error({ err, userId, messageId: savedMessage.id }, 'Increment failed (non-critical)')
+      })
+    }
+    // === END INCREMENT ===
+
     // Broadcast saved user message to all clients viewing this conversation
     this.broadcastMessage({ type: 'message', message: savedMessage }, conversationId)
 
