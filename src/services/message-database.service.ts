@@ -59,6 +59,7 @@ export interface SendMessageInput {
   metadata?: Message['metadata']
   is_tool_interaction?: boolean
   created_for_user_id?: string
+  parent_message_id?: string | null
 }
 
 export interface MessageListResult {
@@ -119,6 +120,53 @@ export class MessageDatabaseService {
   }
 
   /**
+   * List thread replies for a parent message.
+   * Returns replies in chronological order (oldest first).
+   */
+  static async listThreadReplies(
+    conversationId: string,
+    parentMessageId: string,
+    limit: number = 50,
+    cursor?: string,
+    userId?: string,
+    conversationType?: ConversationType,
+  ): Promise<MessageListResult> {
+    initFirebaseAdmin()
+    const collection = userId
+      ? resolveMessagesPath(conversationId, userId, conversationType)
+      : sharedMessagesCollection(conversationId)
+
+    try {
+      const options: QueryOptions = {
+        where: [{ field: 'parent_message_id', op: '==', value: parentMessageId }],
+        orderBy: [{ field: 'timestamp', direction: 'ASCENDING' }],  // Chronological for threads
+        limit: limit + 1,
+      }
+      if (cursor) {
+        options.startAfter = [cursor]
+      }
+
+      const docs = await queryDocuments(collection, options)
+      const hasMore = docs.length > limit
+      const slice = hasMore ? docs.slice(0, limit) : docs
+
+      const messages: Message[] = slice.map((doc) =>
+        toMessage(doc.data, doc.id, conversationId),
+      )
+
+      const nextCursor =
+        hasMore && messages.length > 0
+          ? messages[messages.length - 1].timestamp
+          : null
+
+      return { messages, next_cursor: nextCursor, has_more: hasMore }
+    } catch (error) {
+      log.error({ err: error, conversationId, parentMessageId }, 'listThreadReplies failed')
+      return { messages: [], next_cursor: null, has_more: false }
+    }
+  }
+
+  /**
    * Send a new message to a conversation.
    */
   static async sendMessage(
@@ -142,6 +190,7 @@ export class MessageDatabaseService {
       timestamp: now,
       sender_user_id: input.sender_user_id,
       visible_to_user_ids: input.visible_to_user_ids ?? null,
+      ...(input.parent_message_id !== undefined && { parent_message_id: input.parent_message_id }),
       ...(input.metadata && { metadata: input.metadata }),
       ...(input.is_tool_interaction != null && { is_tool_interaction: input.is_tool_interaction }),
       ...(input.created_for_user_id && { created_for_user_id: input.created_for_user_id }),

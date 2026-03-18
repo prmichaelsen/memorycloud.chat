@@ -10,6 +10,8 @@ import { useReactActionBarItem } from '@/hooks/action-bar/useReactActionBarItem'
 import { getTextContent } from '@/lib/message-content'
 import type { Message as MessageType, MessageContent, ContentBlock, ConversationType } from '@/types/conversations'
 import type { ProfileSummary } from '@/lib/profile-map'
+import type { ThreadMetadata } from '@/types/threads'
+import { ThreadIndicator } from '@/components/threads/ThreadIndicator'
 
 interface MessageProps {
   message: MessageType
@@ -18,11 +20,12 @@ interface MessageProps {
   canModerate?: boolean
   senderProfile?: ProfileSummary | null
   ghostOwner?: string
-  onReply?: (messageId: string, quotedContent: string) => void
   onEdit?: (messageId: string) => void
   onDelete?: (messageId: string) => void
   onTogglePin?: (messageId: string) => void
   onReport?: (messageId: string) => void
+  onOpenThread?: (message: MessageType) => void
+  threadMetadata?: ThreadMetadata
   conversationType?: ConversationType
 }
 
@@ -33,11 +36,12 @@ export const Message = memo(function Message({
   canModerate = false,
   senderProfile,
   ghostOwner,
-  onReply,
   onEdit,
   onDelete,
   onTogglePin,
   onReport,
+  onOpenThread,
+  threadMetadata,
   conversationType,
 }: MessageProps) {
   const isUser = message.sender_user_id ? message.sender_user_id === currentUserId : message.role === 'user'
@@ -68,7 +72,6 @@ export const Message = memo(function Message({
   const isGhostMessage = !!ghostOwner && message.role === 'assistant'
 
   // Action bar hooks — called unconditionally (React rules of hooks)
-  const noopReply = useCallback((_id: string, _content: string) => {}, [])
   const noopEdit = useCallback((_id: string) => {}, [])
   const noopDelete = useCallback((_id: string) => {}, [])
   const noopTogglePin = useCallback((_id: string) => {}, [])
@@ -78,8 +81,8 @@ export const Message = memo(function Message({
     message,
     currentUserId: currentUserId ?? '',
     conversationId: conversationId ?? '',
-    onReply: onReply ?? noopReply,
     onEdit: onEdit ?? noopEdit,
+    onOpenThread,
   })
   const reactItem = useReactActionBarItem(message.id, conversationId ?? '')
   const overflowItem = useMessageOverflowItems({
@@ -234,6 +237,14 @@ export const Message = memo(function Message({
             reactions={message.metadata.reactions}
             currentUserId={currentUserId}
             onToggle={handleReactionToggle}
+          />
+        )}
+
+        {/* Thread indicator */}
+        {threadMetadata && onOpenThread && !message.parent_message_id && (
+          <ThreadIndicator
+            metadata={threadMetadata}
+            onClick={() => onOpenThread(message)}
           />
         )}
       </div>

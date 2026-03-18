@@ -6,7 +6,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { X, Reply, ArrowLeft } from 'lucide-react'
-import { MessageDatabaseService } from '@/services/message-database.service'
 import type { Message, ConversationType } from '@/types/conversations'
 import { Message as MessageComponent } from '@/components/chat/Message'
 import { MessageCompose } from '@/components/chat/MessageCompose'
@@ -124,19 +123,18 @@ export function ThreadPanel({
     }
   }, [handleMouseMove, handleMouseUp])
 
-  // Load initial thread replies
+  // Load initial thread replies via API
   useEffect(() => {
     async function loadReplies() {
       setLoading(true)
       try {
-        const result = await MessageDatabaseService.listThreadReplies(
-          conversationId,
-          parentMessage.id,
-          50,
-          undefined,
-          userId,
-          conversationType
+        const res = await fetch(
+          `/api/conversations/${conversationId}/threads/${parentMessage.id}?limit=50`,
         )
+        if (!res.ok) {
+          throw new Error(`Failed to load thread replies (${res.status})`)
+        }
+        const result = await res.json() as { messages: Message[]; has_more: boolean }
         setReplies(result.messages)
         setHasMore(result.has_more)
       } catch (error) {
@@ -146,7 +144,7 @@ export function ThreadPanel({
       }
     }
     loadReplies()
-  }, [conversationId, parentMessage.id, userId, conversationType])
+  }, [conversationId, parentMessage.id])
 
   // Add method to receive new replies from parent (called when WebSocket message arrives)
   useEffect(() => {

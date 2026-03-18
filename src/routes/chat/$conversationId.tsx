@@ -44,6 +44,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ThreadMetadataService } from '@/services/thread-metadata.service'
 import type { ThreadMetadata } from '@/types/threads'
 import { parseThreadHash } from '@/lib/thread-links'
+import { ThreadPanel } from '@/components/threads/ThreadPanel'
 
 function ConversationViewWrapper() {
   const { conversationId } = Route.useParams()
@@ -56,10 +57,10 @@ export const Route = createFileRoute('/chat/$conversationId')({
     tab: search.tab as string | undefined,
   }),
   beforeLoad: async ({ params }) => {
-    if (typeof window !== 'undefined') return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false }
+    if (typeof window !== 'undefined') return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false, initialThreadMetadata: {} }
     try {
       const user = await getAuthSession()
-      if (!user) return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false }
+      if (!user) return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false, initialThreadMetadata: {} }
       let conversation = await ConversationDatabaseService.getConversation(params.conversationId, user.uid)
 
       if (!conversation) {
@@ -80,14 +81,33 @@ export const Route = createFileRoute('/chat/$conversationId')({
       const profiles = conversation
         ? await buildProfileMap(conversation.participant_user_ids ?? [])
         : {}
+
+      // Load thread metadata for top-level messages (server-side only)
+      const allMessages = (msgResult.messages ?? []).reverse()
+      const topLevelMsgs = allMessages.filter(m => !m.parent_message_id)
+      const threadMetadataMap: Record<string, ThreadMetadata> = {}
+      await Promise.all(
+        topLevelMsgs.map(async (msg) => {
+          try {
+            const metadata = await ThreadMetadataService.getMetadata(params.conversationId, msg.id)
+            if (metadata) {
+              threadMetadataMap[msg.id] = metadata
+            }
+          } catch {
+            // Non-critical — skip failed metadata loads
+          }
+        }),
+      )
+
       return {
         initialConversation: conversation,
-        initialMessages: (msgResult.messages ?? []).reverse(),
+        initialMessages: allMessages,
         initialHasMore: msgResult.has_more,
         initialProfiles: profiles,
+        initialThreadMetadata: threadMetadataMap,
       }
     } catch {
-      return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false }
+      return { initialConversation: null, initialMessages: [], initialProfiles: {}, initialHasMore: false, initialThreadMetadata: {} }
     }
   },
 })
@@ -101,7 +121,7 @@ function ConversationView() {
   const isMobile = useMediaQuery('(max-width: 768px)')
 
   // SSR data from beforeLoad
-  const { initialConversation, initialMessages, initialProfiles, initialHasMore } = Route.useRouteContext()
+  const { initialConversation, initialMessages, initialProfiles, initialHasMore, initialThreadMetadata } = Route.useRouteContext()
 
   // State
   const [conversation, setConversation] = useState<Conversation | null>(initialConversation ?? null)
@@ -118,7 +138,7 @@ function ConversationView() {
   const [currentUserAuthLevel, setCurrentUserAuthLevel] = useState<GroupAuthLevel>(5)
   const [showAddParticipant, setShowAddParticipant] = useState(false)
   const [openThread, setOpenThread] = useState<Message | null>(null)
-  const [threadMetadata, setThreadMetadata] = useState<Record<string, ThreadMetadata>>({})
+  const [threadMetadata, setThreadMetadata] = useState<Record<string, ThreadMetadata>>(initialThreadMetadata ?? {})
 
   // Streaming blocks state for real-time agent generation
   const [streamingBlocks, setStreamingBlocks] = useState<StreamingBlock[]>([])
@@ -130,38 +150,9 @@ function ConversationView() {
   // Typing indicator debounce refs
   const typingTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-  // Load thread metadata for visible messages
-  useEffect(() => {
-    async function loadThreadMetadata() {
-      if (!messages.length) return
-
-      // Only load metadata for top-level messages
-      const topLevelMessages = messages.filter(m => !m.parent_message_id)
-      if (!topLevelMessages.length) return
-
-      // Batch load metadata in parallel
-      const metadataPromises = topLevelMessages.map(async (msg) => {
-        try {
-          const metadata = await ThreadMetadataService.getMetadata(conversationId, msg.id)
-          return { messageId: msg.id, metadata }
-        } catch (error) {
-          console.error(`Failed to load thread metadata for message ${msg.id}:`, error)
-          return { messageId: msg.id, metadata: null }
-        }
-      })
-
-      const results = await Promise.all(metadataPromises)
-      const metadataMap: Record<string, ThreadMetadata> = {}
-      for (const { messageId, metadata } of results) {
-        if (metadata) {
-          metadataMap[messageId] = metadata
-        }
-      }
-      setThreadMetadata(metadataMap)
-    }
-
-    loadThreadMetadata()
-  }, [messages, conversationId])
+  // Thread metadata is loaded server-side in beforeLoad.
+  // Real-time updates to metadata are handled by WebSocket message routing below
+  // (when a thread reply arrives, we optimistically increment the local metadata).
 
   // Handle deep links to threads (e.g., #thread-{parentId}/reply-{replyId})
   useEffect(() => {
@@ -267,13 +258,35 @@ function ConversationView() {
             }
           }
 
-          // Refresh thread metadata for parent message
-          ThreadMetadataService.getMetadata(conversationId, msg.parent_message_id).then((metadata) => {
-            if (metadata) {
-              setThreadMetadata((prev) => ({
+          // Optimistically update thread metadata for the parent message
+          setThreadMetadata((prev) => {
+            const parentId = msg.parent_message_id!
+            const existing = prev[parentId]
+            if (existing) {
+              return {
                 ...prev,
-                [msg.parent_message_id!]: metadata,
-              }))
+                [parentId]: {
+                  ...existing,
+                  reply_count: existing.reply_count + 1,
+                  last_reply_at: msg.timestamp,
+                  last_reply_by_user_id: msg.sender_user_id ?? existing.last_reply_by_user_id,
+                  updated_at: msg.timestamp,
+                },
+              }
+            }
+            // First reply — create initial metadata entry
+            return {
+              ...prev,
+              [parentId]: {
+                parent_message_id: parentId,
+                reply_count: 1,
+                participant_user_ids: msg.sender_user_id ? [msg.sender_user_id] : [],
+                last_reply_at: msg.timestamp,
+                last_reply_by_user_id: msg.sender_user_id ?? '',
+                unread_by_user: {},
+                created_at: msg.timestamp,
+                updated_at: msg.timestamp,
+              },
             }
           })
         } else {
@@ -641,7 +654,6 @@ function ConversationView() {
             onLoadMore={loadMore}
             typingUsers={typingUsers}
             streamingBlocks={streamingBlocks}
-            onReply={handleReply}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onTogglePin={handleTogglePin}
@@ -675,6 +687,21 @@ function ConversationView() {
             onClose={() => setShowMembers(false)}
           />
         </SlideOverPanel>
+      )}
+
+      {/* Thread panel */}
+      {openThread && user && (
+        <ThreadPanel
+          conversationId={conversationId}
+          parentMessage={openThread}
+          onClose={handleCloseThread}
+          userId={user.uid}
+          conversationType={conversation?.type}
+          profiles={profiles}
+          onSendReply={handleSendReply}
+          onTypingStart={handleTypingStart}
+          onTypingStop={handleTypingStop}
+        />
       )}
 
       {/* Add participant modal */}

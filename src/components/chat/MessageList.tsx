@@ -33,11 +33,12 @@ interface MessageListProps {
   onLoadMore?: () => void
   typingUsers?: Array<{ user_id: string; user_name: string }>
   streamingBlocks?: StreamingBlock[]
-  onReply?: (messageId: string, quotedContent: string) => void
   onEdit?: (messageId: string) => void
   onDelete?: (messageId: string) => void
   onTogglePin?: (messageId: string) => void
   onReport?: (messageId: string) => void
+  onOpenThread?: (message: MessageType) => void
+  threadMetadata?: Record<string, any>
   conversationType?: ConversationType
   inputHeight?: number
 }
@@ -64,11 +65,12 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
   onLoadMore,
   typingUsers = [],
   streamingBlocks = [],
-  onReply,
   onEdit,
   onDelete,
   onTogglePin,
   onReport,
+  onOpenThread,
+  threadMetadata = {},
   conversationType,
   inputHeight = 0,
 }, ref) {
@@ -82,9 +84,11 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set())
   const { withToast } = useActionToast()
 
-  // Build augmented items array with messages + synthetic streaming/typing entries
+  // Build augmented items array with messages + synthetic streaming/typing entries.
+  // Filter out thread replies (messages with parent_message_id) from the main view.
   const items = useMemo(() => {
-    const result: ListItem[] = messages.map(m => ({ type: 'message' as const, message: m }))
+    const topLevelMessages = messages.filter(m => !m.parent_message_id)
+    const result: ListItem[] = topLevelMessages.map(m => ({ type: 'message' as const, message: m }))
     if (streamingBlocks.length > 0) {
       result.push({ type: 'streaming' as const, blocks: streamingBlocks })
     }
@@ -292,11 +296,12 @@ export const MessageList = forwardRef<MessageListRef, MessageListProps>(function
                   currentUserId={currentUserId ?? user?.uid}
                   conversationId={conversationId}
                   canModerate={canModerate}
-                  onReply={onReply}
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onTogglePin={onTogglePin}
                   onReport={onReport}
+                  onOpenThread={onOpenThread}
+                  threadMetadata={threadMetadata[message.id]}
                   conversationType={conversationType}
                 />
 

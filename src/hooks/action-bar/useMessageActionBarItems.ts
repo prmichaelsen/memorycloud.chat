@@ -23,11 +23,14 @@ export function useMessageActionBarItems(opts: {
   const saveMemoryItem = useSaveMemoryActionBarItem(textContent, conversationId)
   const copyThreadLinkItem = useCopyThreadLinkActionBarItem(message, conversationId)
 
+  // Call hook unconditionally (React rules of hooks) with a noop fallback
+  const noopOpenThread = ((_msg: Message) => {}) as (message: Message) => void
+  const replyInThreadItem = useReplyInThreadActionBarItem(message, onOpenThread ?? noopOpenThread)
+
   const items = [copyItem, editItem, saveMemoryItem]
 
   // Add "Reply in thread" action if callback provided and message is top-level
   if (onOpenThread && !message.parent_message_id) {
-    const replyInThreadItem = useReplyInThreadActionBarItem(message, onOpenThread)
     items.splice(1, 0, replyInThreadItem) // Insert after copy, before edit
   }
 

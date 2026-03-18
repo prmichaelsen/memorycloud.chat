@@ -129,10 +129,10 @@ milestones:
 
   - id: milestone_16
     name: Threaded Replies
-    status: in_progress
+    status: completed
     file: agent/milestones/milestone-16-threaded-replies.md
     tasks_total: 11
-    tasks_completed: 10
+    tasks_completed: 11
     estimated_weeks: 4-6
 
   - id: milestone_17
@@ -753,12 +753,12 @@ tasks:
       completed_date: 2026-03-18T17:10:00Z
     - id: task-79
       name: Integration Testing + Polish
-      status: not_started
-      started: null
+      status: completed
+      started: 2026-03-18T17:30:00Z
       file: agent/tasks/milestone-16-threaded-replies/task-79-integration-testing.md
       estimated_hours: 4-6
-      actual_hours: null
-      completed_date: null
+      actual_hours: 0.5
+      completed_date: 2026-03-18T18:00:00Z
     - id: task-83
       name: Resizable Thread Panel via Drag
       status: completed
@@ -806,6 +806,8 @@ progress:
   overall: 100
 
 recent_work:
+  - date: 2026-03-18
+    description: "M16: COMPLETED Threaded Replies milestone (11/11 tasks) — resizable thread panel with drag handle, thread notifications for participants, deep links (#thread-{id}/reply-{id}), mobile full-screen view with URL hash back-button, ThreadIndicator component, thread replies API endpoint, integration fixes (ThreadPanel rendering, MessageList filtering, hooks-of-hooks fix, SSR-safe metadata loading)"
   - date: 2026-03-18
     description: "M17: Planned Group Ghost Chat milestone (3 tasks, 1 week) — ports agentbase.me group ghost UX with Ghost tab on group pages, group-specific system prompt with attribution requirements, and group context enrichment. Builds on M15 ghostOwner infrastructure."
   - date: 2026-03-18
