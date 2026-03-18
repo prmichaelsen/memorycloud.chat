@@ -8,6 +8,7 @@ import { Virtuoso } from 'react-virtuoso'
 import { Link, useParams } from '@tanstack/react-router'
 import { MessageSquare, Users, Plus, Globe } from 'lucide-react'
 import { BrandIcon } from '@/components/BrandIcon'
+import { AgentIcon } from '@/components/AgentIcon'
 import { useTheme } from '@/lib/theming'
 import { useAuth } from '@/components/auth/AuthContext'
 import { listConversations } from '@/services/conversation.service'
@@ -108,7 +109,7 @@ export function ConversationList({ onNewDm, onNewGroup, initialConversations, in
   const syntheticConversations: Array<{
     id: string
     name: string
-    type: 'agent' | 'group'
+    type: 'agent' | 'group' | 'ghost'
     preview: string
     icon: React.ReactNode
   }> = [
@@ -117,14 +118,14 @@ export function ConversationList({ onNewDm, onNewGroup, initialConversations, in
       name: 'Agent',
       type: 'agent',
       preview: 'Ask me anything',
-      icon: <BrandIcon className="w-5 h-5" size="w-5 h-5" />,
+      icon: <AgentIcon className="w-5 h-5" size="w-5 h-5" />,
     },
     {
       id: 'ghost:space:the_void',
       name: 'Ghost of the Void',
-      type: 'group',
+      type: 'ghost',
       preview: 'Ask me about anything shared in The Void',
-      icon: <Globe className="w-5 h-5" />,
+      icon: <BrandIcon className="w-5 h-5" size="w-5 h-5" />,
     },
   ]
 
@@ -159,9 +160,10 @@ export function ConversationList({ onNewDm, onNewGroup, initialConversations, in
               <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
                 type === 'dm' ? 'bg-brand-primary/20 text-brand-primary'
                 : type === 'group' ? 'bg-brand-secondary/20 text-brand-secondary'
+                : type === 'ghost' ? 'bg-purple-500/20 text-purple-400'
                 : 'bg-brand-accent/20 text-brand-accent'
               }`}>
-                {type === 'dm' ? 'dm' : type === 'group' ? 'group' : 'agent'}
+                {type === 'dm' ? 'dm' : type === 'group' ? 'group' : type === 'ghost' ? 'ghost' : 'agent'}
               </span>
             </div>
           </div>
@@ -273,9 +275,10 @@ export function ConversationList({ onNewDm, onNewGroup, initialConversations, in
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
                           conv.type === 'dm' ? 'bg-brand-primary/20 text-brand-primary'
                           : conv.type === 'group' ? 'bg-brand-secondary/20 text-brand-secondary'
+                          : conv.type === 'ghost' ? 'bg-purple-500/20 text-purple-400'
                           : 'bg-brand-accent/20 text-brand-accent'
                         }`}>
-                          {conv.type === 'dm' ? 'dm' : conv.type === 'group' ? 'group' : 'agent'}
+                          {conv.type === 'dm' ? 'dm' : conv.type === 'group' ? 'group' : conv.type === 'ghost' ? 'ghost' : 'agent'}
                         </span>
                         {getLastMessageTimestamp(conv) && (
                           <span className={`text-xs ${t.textMuted}`}>
